@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bottom_info_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/bottom_00first_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/textview2_bg"
+        android:padding="3dp"
+        android:textColor="@color/gold"
+        android:layout_marginRight="4dp"
+        android:text="最新"/>
+
+    <TextView
+        android:id="@+id/bottom_first_text"
+        android:singleLine="true"
+        android:textColor="@color/gray"
+        android:textSize="12sp"
+        android:layout_marginRight="4dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="禹都yd"/>
+
+    <ImageView
+        android:id="@+id/bottom_container_adlogo"
+        android:layout_marginTop="2dp"
+        android:layout_width="13dp"
+        android:layout_height="13dp"
+        android:layout_gravity="center"
+        android:src="@mipmap/ic_adlogo_fe"
+        android:scaleType="fitXY"/>
+
+    <TextView
+        android:id="@+id/bottom_second_text"
+        android:singleLine="true"
+        android:textColor="@color/gray"
+        android:textSize="12sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1小时前"/>
+
+    <TextView
+        android:id="@+id/bottom_container_PitLocation"
+        android:layout_width="0dp"
+        android:layout_height="13dp"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:id="@+id/bottom_container_mislike"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="X"
+        android:textColor="@color/gray"
+        android:layout_marginBottom="2dp"
+        android:background="@drawable/text_ring"/>
+
+
+</LinearLayout>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/setting_menu_recover"
+        android:orderInCategory="100"
+        android:showAsAction="ifRoom|withText"
+        android:title="恢复默认设置" />
+</menu>

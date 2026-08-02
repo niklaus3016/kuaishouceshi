@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/llbg">
+
+    <LinearLayout
+        android:layout_margin="15dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@color/white">
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginEnd="5dp"
+            android:src="@drawable/hds_icon_search"/>
+
+        <EditText
+            android:id="@+id/recom_ed"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:background="@null"
+            android:textColor="@color/gray" />
+
+        <ImageView
+            android:id="@+id/hot_text_delete"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/text_delete"/>
+
+        <View
+            android:layout_width="0.3dp"
+            android:layout_height="25dp"
+            android:layout_marginEnd="10dp"
+            android:background="@color/gray"
+            />
+
+        <TextView
+            android:id="@+id/recom_search"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="搜索"
+            android:textColor="@color/gray"
+            />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/linear_recommend_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+        <com.baidu.mobads.demo.main.tools.RefreshAndLoadMoreView
+            android:id="@+id/native_list_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+
+
+</LinearLayout>

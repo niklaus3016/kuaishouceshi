@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp"
+    android:id="@+id/rlTemplate1"
+    android:background="@color/white"
+    android:descendantFocusability="blocksDescendants">
+
+    <ImageView
+        android:id="@+id/iv_icon"
+        android:scaleType="centerCrop"
+        android:layout_width="48dp"
+        android:layout_height="48dp" />
+    <TextView
+        android:id="@+id/iv_title"
+        android:hint="标题"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="60dp" />
+
+    <TextView
+        android:id="@+id/iv_desc"
+        android:textSize="14sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:hint="内容描述"
+        android:layout_below="@+id/iv_title"
+        android:layout_marginLeft="60dp"
+        android:textColor="#000" />
+
+    <ImageView
+        android:id="@+id/close"
+        android:src="@drawable/ico_close_light"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_width="16dp"
+        android:layout_height="16dp" />
+
+    <LinearLayout
+        android:id="@+id/container"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/iv_icon" >
+        <ImageView
+            android:id="@+id/iv_main1"
+            android:scaleType="fitXY"
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:layout_weight = "1"/>
+        <ImageView
+            android:id="@+id/iv_main2"
+            android:scaleType="fitXY"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:layout_weight = "1"/>
+        <ImageView
+            android:id="@+id/iv_main3"
+            android:scaleType="fitXY"
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:layout_weight = "1"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/iv_brandname"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/container"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="4dp"
+        android:gravity="center_vertical"
+        android:hint="智选推荐"
+        android:textColor="@color/dimgray"
+        android:textSize="10sp" />
+
+    <ImageView
+        android:id="@+id/iv_baidulogo"
+        android:layout_width="13dp"
+        android:layout_height="13dp"
+        android:layout_below="@id/app_download_container"
+        android:layout_marginLeft="4dp"
+        android:layout_marginTop="6dp"
+        android:layout_toRightOf="@id/iv_brandname"
+        android:scaleType="fitXY" />
+
+    <ImageView
+        android:id="@+id/iv_adlogo"
+        android:layout_width="25dp"
+        android:layout_height="13dp"
+        android:layout_below="@id/app_download_container"
+        android:layout_marginTop="6dp"
+        android:layout_toRightOf="@id/iv_baidulogo" />
+
+    <RelativeLayout
+        android:id="@+id/app_download_container"
+        android:padding="4dp"
+        android:visibility="gone"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/container"
+        android:background="@drawable/rldownload_square_bg_gray" >
+
+        <TextView
+            android:id="@+id/native_version"
+            android:hint="版本"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:visibility="visible"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginRight="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/native_function"
+            android:text="功能"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:layout_toRightOf="@id/native_version"
+            android:layout_alignBaseline="@id/app_name"
+            android:layout_marginRight="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/native_privacy"
+            android:text="隐私"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:layout_toRightOf="@id/native_function"
+            android:layout_alignBaseline="@id/native_version"
+            android:layout_marginRight="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/native_permission"
+            android:text="权限"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:layout_toRightOf="@id/native_privacy"
+            android:layout_alignBaseline="@id/native_version"
+            android:layout_marginRight="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/app_name"
+            android:hint="应用"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:visibility="visible"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@+id/native_permission"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/native_publisher"
+            android:hint="开发者"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:layout_below="@id/native_version"
+            android:layout_marginTop="4dp"
+            android:layout_alignParentLeft="true"
+            android:layout_marginRight="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </RelativeLayout>
+
+</RelativeLayout>

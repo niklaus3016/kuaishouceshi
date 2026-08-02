@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:background="@drawable/topbanner">
+
+        <LinearLayout
+            android:layout_margin="15dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@color/white">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="5dp"
+                android:src="@drawable/hds_icon_search"/>
+
+            <EditText
+                android:id="@+id/hot_et"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="40dp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:background="@null"
+                android:textColor="@color/gray" />
+
+            <ImageView
+                android:id="@+id/hot_text_delete"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/text_delete"/>
+
+            <View
+                android:layout_width="0.3dp"
+                android:layout_height="25dp"
+                android:layout_marginEnd="10dp"
+                android:background="@color/gray" />
+
+            <TextView
+                android:id="@+id/hot_search"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="搜索"
+                android:textColor="@color/gray" />
+
+        </LinearLayout>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_hotContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="180dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+        <com.baidu.mobads.demo.main.tools.RefreshAndLoadMoreView
+            android:id="@+id/hot_lv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+
+</FrameLayout>

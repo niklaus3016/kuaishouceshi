@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/feed_patterns"
+        android:orderInCategory="100"
+        android:showAsAction="always|withText"
+        android:title="切换样式"  >
+
+        <menu xmlns:android="http://schemas.android.com/apk/res/android">
+            <item
+                android:id="@+id/big_pic"
+                android:orderInCategory="100"
+                android:showAsAction="never"
+                android:title="大图+ICON+描述"/>
+
+            <item
+                android:id="@+id/santu"
+                android:orderInCategory="100"
+                android:showAsAction="never"
+                android:title="信息流三图"/>
+
+            <item
+                android:id="@+id/big_pic_reward"
+                android:orderInCategory="100"
+                android:showAsAction="never"
+                android:title="大图+电商激励"/>
+
+        </menu>
+    </item>
+
+</menu>

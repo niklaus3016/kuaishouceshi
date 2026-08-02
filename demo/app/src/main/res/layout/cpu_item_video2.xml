@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/video_container"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="12dp"
+    android:paddingRight="12dp">
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:text="TextView" />
+
+    <!-- 视频控件大小比例设置为16:9-->
+    <LinearLayout
+        android:id="@+id/ccc"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textView"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
+        app:layout_constraintDimensionRatio="16:9">
+        <com.baidu.mobads.sdk.api.CpuVideoView
+            android:id="@+id/cpu_video_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+           />
+    </LinearLayout>
+
+
+
+    <LinearLayout
+        android:id="@+id/bottom_info_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ccc"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/bottom_00first_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/textview2_bg"
+            android:padding="3dp"
+            android:textColor="@color/gold"
+            android:layout_marginRight="4dp"
+            android:text="最新"/>
+
+        <TextView
+            android:id="@+id/bottom_first_text"
+            android:singleLine="true"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:layout_marginRight="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="禹都yd"/>
+
+        <ImageView
+            android:id="@+id/bottom_container_adlogo"
+            android:layout_marginTop="2dp"
+            android:layout_width="13dp"
+            android:layout_height="13dp"
+            android:layout_gravity="center"
+            android:src="@mipmap/ic_adlogo_fe"
+            android:scaleType="fitXY"/>
+
+        <TextView
+            android:id="@+id/bottom_second_text"
+            android:singleLine="true"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1小时前"/>
+
+        <TextView
+            android:id="@+id/bottom_container_PitLocation"
+            android:layout_width="0dp"
+            android:layout_height="13dp"
+            android:layout_weight="1"/>
+
+        <TextView
+            android:id="@+id/bottom_container_mislike"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="X"
+            android:textColor="@color/gray"
+            android:layout_marginBottom="2dp"
+            android:background="@drawable/text_ring"/>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/download_container"
+        android:padding="6dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ccc"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/app_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:text="一键清理" />
+
+        <TextView
+            android:id="@+id/app_ver"
+            android:layout_toRightOf="@id/app_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:textColor="@color/gray"
+            android:textSize="16sp"
+            android:text="版本:8.008" />
+
+        <TextView
+            android:id="@+id/privacy"
+            android:visibility="visible"
+            android:layout_toRightOf="@id/app_ver"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/gray"
+            android:layout_marginLeft="8dp"
+            android:textSize="16sp"
+            android:text="隐私" />
+
+        <TextView
+            android:id="@+id/permission"
+            android:visibility="visible"
+            android:layout_toRightOf="@id/privacy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/gray"
+            android:textSize="16sp"
+            android:layout_marginLeft="8dp"
+            android:text="权限" />
+
+        <TextView
+            android:id="@+id/publisher"
+            android:layout_below="@id/app_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/gray"
+            android:textSize="16sp"
+            android:text="北京XXXX公司" />
+
+        <com.baidu.mobads.demo.main.tools.CustomProgressButton
+            android:id="@+id/download"
+            android:layout_width="60dp"
+            android:layout_height="27dp"
+            android:padding="3dp"
+            android:layout_toLeftOf="@id/bottom_container_mislike2"
+            android:layout_centerInParent="true" />
+
+        <TextView
+            android:id="@+id/bottom_container_mislike2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginLeft="6dp"
+            android:text="X"
+            android:textColor="@color/gray"
+            android:background="@drawable/text_ring"/>
+
+        <ImageView
+            android:layout_width="13dp"
+            android:layout_height="13dp"
+            android:layout_marginTop="5dp"
+            android:src="@drawable/new_bg_logo"
+            android:layout_toLeftOf="@id/mob_adIcon_2x"
+            android:scaleType="centerCrop"
+            android:layout_below="@id/publisher"/>
+
+        <ImageView
+            android:id="@+id/mob_adIcon_2x"
+            android:layout_width="25dp"
+            android:layout_height="13dp"
+            android:layout_marginTop="5dp"
+            android:layout_alignParentEnd="true"
+            android:layout_below="@id/publisher"
+            android:src="@drawable/mob_adicon_2x"/>
+    </RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+    <RelativeLayout
+        android:orientation="horizontal"
+        android:layout_gravity="left"
+        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/native_interstitial_edit_apid_key"
+            android:text="广告位ID："
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center_vertical"/>
+
+        <EditText
+            android:id="@+id/native_interstitial_edit_apid_value"
+            android:inputType="number"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_toRightOf="@+id/native_interstitial_edit_apid_key"
+            android:layout_toLeftOf="@+id/native_interstitial_change_direction"
+            />
+        <TextView
+            android:id="@+id/native_interstitial_change_direction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="切换横竖屏幕"/>
+    </RelativeLayout>
+<LinearLayout
+    android:id="@+id/native_interstitial_button_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:paddingBottom="20dp">
+    <Button
+        android:id="@+id/native_interstitial_load"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="load"
+        android:layout_weight="1"/>
+    <Button
+        android:id="@+id/native_interstitial_show"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="show"
+        android:enabled="false"
+        android:layout_weight="1"/>
+</LinearLayout>
+</RelativeLayout>

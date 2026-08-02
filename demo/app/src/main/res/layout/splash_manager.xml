@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/loadAndShow"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="64dp"
+        android:text="@string/loadandshow" />
+
+    <Button
+        android:id="@+id/load"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignTop="@id/loadAndShow"
+        android:layout_marginTop="70dp"
+        android:text="@string/load" />
+
+    <Button
+        android:id="@+id/show"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignTop="@id/load"
+        android:layout_marginTop="70dp"
+        android:text="@string/show" />
+
+    <TextView
+        android:id="@+id/stateTextView"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_below="@+id/show"
+        android:layout_marginTop="50dp"
+        android:gravity="center"
+        android:text="@string/state"
+        android:textColor="@color/cadetblue"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <RelativeLayout
+        android:id="@+id/adsRl"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/appLogo"
+        android:background="@color/white"
+        android:visibility="invisible">
+
+    </RelativeLayout>
+    <!-- 百度开屏广告支持“半屏/全屏”展示，开发者可以把Logo区域放在屏幕底部，然后在Logo上方提供一个容器来放置半开屏广告，请注意此容器宽度至少200dp，高度至少150dp -->
+
+    <!-- 百度开屏广告支持“半屏/全屏”展示，开发者可以把Logo区域放在屏幕底部，然后在Logo上方提供一个容器来放置半开屏广告，请注意此容器宽度至少200dp，高度至少150dp -->
+
+    <!-- 1.Logo区域：展示半开屏广告时使用，如果想展示全开屏广告，可以不需要这个Logo区域 -->
+    <!-- 注意：如需要这个Logo区域，建议开发者使用自己的Logo资源，而不是网盟的Logo资源@drawable/yidonglianmeng，资源规格可参照@drawable/yidonglianmeng -->
+    <RelativeLayout
+        android:id="@+id/appLogo"
+        android:layout_width="match_parent"
+        android:layout_height="114dp"
+        android:layout_alignParentBottom="true"
+        android:background="@color/white"
+        android:visibility="invisible">
+
+        <ImageView
+            android:id="@+id/bottomIcon"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/yidonglianmeng"
+            android:contentDescription="@string/app_name" />
+    </RelativeLayout>
+
+    <!-- 2.开屏广告容器区域：-->
+    <!-- 注意：该区域宽度至少200dp，高度至少150dp。在本示例中没有写死adsRl的高度值，是因为第1部分的app_logo区域是一个高度很小的图片。 -->
+
+    <!-- 3.预设开屏启动页图片区域： -->
+    <!-- 开发者可以把自家App设计开屏图片摆放在这里-->
+    <!-- 注意1：直接将此图盖在广告容器的上面即可，始终不要将广告容器adsRl的设为invisible，否则影响到广告的计费。-->
+    <!-- 注意2：建议开发者使用自己的开屏图片资源  -->
+
+</RelativeLayout>

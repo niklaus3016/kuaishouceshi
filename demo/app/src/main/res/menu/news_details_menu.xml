@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/news_menu_favorite"
+        android:orderInCategory="100"
+        android:title="收藏文章"
+        android:icon="@mipmap/ic_action_star_10"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/news_menu_copy_link"
+        android:orderInCategory="100"
+        android:title="复制原文链接"
+        android:icon="@mipmap/ic_action_attachment_2"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/news_menu_report"
+        android:orderInCategory="100"
+        android:title="举报文章"
+        android:icon="@mipmap/ic_action_warning"
+        app:showAsAction="never" />
+
+</menu>

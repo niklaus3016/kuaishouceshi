@@ -1,0 +1,69 @@
+apply plugin: 'com.android.application'
+android {
+    compileSdkVersion 34
+
+    defaultConfig {
+        applicationId "com.baidu.mobads.demo.main"
+	minSdkVersion 24
+        targetSdkVersion 32
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+
+signingConfigs {
+        release {
+        }
+    debug {
+    }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+}
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+
+dependencies {
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.0.0'
+    implementation 'androidx.media3:media3-exoplayer:1.4.0'
+    implementation files ('libs/android-query-full.0.26.7.jar')
+implementation(name:'Baidu_MobAds_SDK-release_v9.432',ext:'aar')
+implementation(name:'Baidu_MobAds_Tools_SDK-release_v3.1',ext:'aar')
+    implementation files("libs/okhttp-3.9.0.jar")
+    /**
+     * 注意: SDK中需要注册BdFileProvider实现下载安装,该类继承自v4的FileProvider类,同时在demo中使用了v4的刷新组件;
+     */
+    implementation 'androidx.appcompat:appcompat:1.0.0'
+    implementation 'com.github.bumptech.glide:glide:4.8.0'
+
+    implementation 'com.google.android.material:material:1.0.0'
+    // RxJava
+    implementation "io.reactivex.rxjava2:rxandroid:2.0.1"
+    implementation "io.reactivex.rxjava2:rxjava:2.0.1"
+
+
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.4.10'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-common:1.4.10'
+    implementation 'org.jetbrains:annotations:13.0'
+    implementation 'org.jetbrains.kotlin:kotlin-android-extensions-runtime:1.4.10'
+    implementation 'com.google.zxing:core:3.4.1'
+    implementation 'com.google.zxing:android-core:3.3.0'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.12'
+    implementation 'com.tencent.mm.opensdk:wechat-sdk-android:+'
+}

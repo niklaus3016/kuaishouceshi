@@ -1,0 +1,92 @@
+ECLIPSE ANDROID PROJECT IMPORT SUMMARY
+======================================
+
+Ignored Files:
+--------------
+The following files were *not* copied into the new Gradle project; you
+should evaluate whether these are still needed in your project and if
+so manually move them:
+
+* .gradle/
+* .gradle/4.1/
+* .gradle/4.1/fileChanges/
+* .gradle/4.1/fileChanges/last-build.bin
+* .gradle/4.1/fileContent/
+* .gradle/4.1/fileContent/fileContent.lock
+* .gradle/4.1/fileHashes/
+* .gradle/4.1/fileHashes/fileHashes.bin
+* .gradle/4.1/fileHashes/fileHashes.lock
+* .gradle/4.1/fileHashes/resourceHashesCache.bin
+* .gradle/4.1/javaCompile/
+* .gradle/4.1/javaCompile/classAnalysis.bin
+* .gradle/4.1/javaCompile/jarAnalysis.bin
+* .gradle/4.1/javaCompile/javaCompile.lock
+* .gradle/4.1/javaCompile/taskHistory.bin
+* .gradle/4.1/javaCompile/taskJars.bin
+* .gradle/4.1/taskHistory/
+* .gradle/4.1/taskHistory/fileSnapshots.bin
+* .gradle/4.1/taskHistory/taskHistory.bin
+* .gradle/4.1/taskHistory/taskHistory.lock
+* .gradle/buildOutputCleanup/
+* .gradle/buildOutputCleanup/built.bin
+* .gradle/buildOutputCleanup/cache.properties
+* .gradle/buildOutputCleanup/cache.properties.lock
+* .idea/
+* .idea/caches/
+* .idea/caches/build_file_checksums.ser
+* .idea/codeStyles/
+* .idea/codeStyles/Project.xml
+* .idea/gradle.xml
+* .idea/libraries/
+* .idea/libraries/Gradle__com_android_support_animated_vector_drawable_26_0_0_alpha1.xml
+* .idea/libraries/Gradle__com_android_support_appcompat_v7_26_0_0_alpha1.xml
+* .idea/libraries/Gradle__com_android_support_support_annotations_26_0_0_alpha1_jar.xml
+* .idea/libraries/Gradle__com_android_support_support_compat_26_0_0_alpha1.xml
+* .idea/libraries/Gradle__com_android_support_support_core_ui_26_0_0_alpha1.xml
+* .idea/libraries/Gradle__com_android_support_support_core_utils_26_0_0_alpha1.xml
+* .idea/libraries/Gradle__com_android_support_support_fragment_26_0_0_alpha1.xml
+* .idea/libraries/Gradle__com_android_support_support_media_compat_26_0_0_alpha1.xml
+* .idea/libraries/Gradle__com_android_support_support_v4_26_0_0_alpha1.xml
+* .idea/libraries/Gradle__com_android_support_support_vector_drawable_26_0_0_alpha1.xml
+* .idea/libraries/Gradle__com_googlecode_android_query_android_query_0_25_9_jar.xml
+* .idea/misc.xml
+* .idea/modules.xml
+* .idea/runConfigurations.xml
+* .idea/workspace.xml
+* BaiduSDKDemo.iml
+* README
+* README.md
+* ant.properties
+* build.xml
+* captures/
+* captures/com.baidu.mobads.demo.main_2018.05.29_15.34.li
+* custom_rules.xml
+* default.properties
+* proguard-project.txt
+
+Moved Files:
+------------
+Android Gradle projects use a different directory structure than ADT
+Eclipse projects. Here's how the projects were restructured:
+
+* AndroidManifest.xml => app/src/main/AndroidManifest.xml
+* libs/Baidu_MobAds_SDK.jar => app/libs/Baidu_MobAds_SDK.jar
+* libs/android-query-full.0.26.7.jar => app/libs/android-query-full.0.26.7.jar
+* lint.xml => app/lint.xml
+* res/ => app/src/main/res/
+* src/ => app/src/main/java/
+
+Next Steps:
+-----------
+You can now build the project. The Gradle project needs network
+connectivity to download dependencies.
+
+Bugs:
+-----
+If for some reason your project does not build, and you determine that
+it is due to a bug or limitation of the Eclipse to Gradle importer,
+please file a bug at http://b.android.com with category
+Component-Tools.
+
+(This import summary is for your information only, and can be deleted
+after import once you are satisfied with the results.)

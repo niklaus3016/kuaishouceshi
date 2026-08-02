@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="4dp">
+
+    <com.baidu.mobads.sdk.api.XNativeView
+        android:id="@+id/novel_xnativeView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="100dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="16:9"
+        android:background="#d2c69f"
+        />
+
+    <TextView
+        android:id="@+id/novel_desc"
+        android:layout_width="match_parent"
+        android:layout_marginTop="10dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/novel_xnativeView"
+        android:text="买清洁用品就逛京东超市，买满立减优惠"
+        android:textColor="@color/black"
+        android:textSize="17sp"
+        android:background="#d2c69f"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/novel_desc"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        android:background="#d2c69f"
+        android:gravity="center">
+        <ImageView
+            android:id="@+id/lly_icon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:scaleType="fitXY"
+            android:src="@mipmap/ic_launcher" />
+        <TextView
+            android:id="@+id/lly_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:layout_weight="1"
+            android:text="京东三只松鼠活动优惠"
+            android:textColor="@color/gray"/>
+
+        <Button
+            android:id="@+id/lly_bt"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:background="@drawable/bt_bg_novel"
+            android:text="立即下载" />
+
+    </LinearLayout>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

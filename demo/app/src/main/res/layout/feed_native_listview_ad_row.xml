@@ -1,0 +1,252 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/native_outer_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp"
+    android:background="@android:color/white"
+    android:descendantFocusability="blocksDescendants">
+
+    <ImageView android:id="@+id/native_icon_image"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:background="#FFFFFF"
+        android:scaleType="centerCrop"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        />
+
+<!--    <com.baidu.mobads.sdk.api.BDMarketingLabel-->
+<!--        android:id="@+id/native_title_pendant"-->
+<!--        android:layout_width="85dp"-->
+<!--        android:layout_height="34dp"-->
+<!--        android:hint="标题"-->
+<!--        android:layout_marginLeft="74dp"-->
+<!--        android:layout_marginTop="2dp"-->
+<!--        android:textSize="16sp"-->
+<!--        android:singleLine="true"-->
+<!--        android:ellipsize="end"-->
+<!--        android:layout_alignParentTop="true"-->
+<!--        android:layout_alignParentLeft="true"-->
+<!--        android:textColor="@color/black" />-->
+    <!--  营销标签+标题组件  -->
+    <com.baidu.mobads.sdk.api.BDMarketingTextView
+        android:id="@+id/native_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="74dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:textColor="@color/black"/>
+
+    <TextView android:id="@+id/native_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="74dp"
+        android:layout_marginTop="4dp"
+        android:textSize="14sp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:hint="内容描述"
+        android:layout_below="@+id/native_title"
+        android:layout_alignParentLeft="true"
+        android:textColor="@color/black" />
+
+    <ImageView
+        android:id="@+id/close"
+        android:src="@drawable/ico_close_light"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_width="16dp"
+        android:layout_height="16dp" />
+
+    <RelativeLayout
+        android:id="@+id/container_above_image"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/native_icon_image"
+        android:layout_marginTop="5dp"/>
+
+    <ImageView
+        android:id="@+id/native_main_image"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:layout_below="@+id/container_above_image"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY" />
+
+    <RelativeLayout
+        android:id="@+id/container_below_image"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/native_main_image"
+        android:layout_marginBottom="5dp"/>
+
+    <RelativeLayout
+        android:id="@+id/bullet_view_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/native_main_image" />
+
+    <RelativeLayout
+        android:id="@+id/flip_page_view_container"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/native_icon_image"
+        android:layout_centerHorizontal="true" />
+
+    <RelativeLayout
+        android:id="@+id/coupon_float_view_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="20dp"
+        android:layout_alignBottom="@+id/native_brand_name"/>
+
+    <RelativeLayout
+        android:id="@+id/shake_view_container"
+        android:layout_width="wrap_content"
+        android:layout_height="120dp"
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/native_icon_image"
+        android:layout_centerHorizontal="true" />
+
+    <RelativeLayout
+        android:id="@+id/e_commerce_card_container"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_centerInParent="true" />
+
+    <RelativeLayout
+        android:id="@+id/shop_coupon_magnetic_sticker_container"
+        android:layout_width="366dp"
+        android:layout_height="90dp"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="10dp"/>
+
+    <ImageView
+        android:id="@+id/native_marketing_pendant"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/native_icon_image"
+        android:layout_alignLeft="@id/native_main_image"
+        android:layout_alignTop="@id/native_main_image"
+        android:layout_centerHorizontal="true"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY" />
+
+    <TextView
+        android:id="@+id/native_brand_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/container_below_image"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="4dp"
+        android:hint="精选推荐"
+        android:textColor="@color/gray"
+        android:textSize="12sp" />
+
+    <ImageView
+        android:id="@+id/native_baidulogo"
+        android:layout_width="13dp"
+        android:layout_height="13dp"
+        android:layout_below="@id/app_download_container"
+        android:layout_marginLeft="4dp"
+        android:layout_marginTop="6dp"
+        android:layout_toRightOf="@id/native_brand_name"
+        android:scaleType="fitXY" />
+
+    <ImageView
+        android:id="@+id/native_adlogo"
+        android:layout_width="25dp"
+        android:layout_height="13dp"
+        android:layout_below="@id/app_download_container"
+        android:layout_marginTop="6dp"
+        android:layout_toRightOf="@id/native_baidulogo" />
+
+    <RelativeLayout
+        android:id="@+id/app_download_container"
+        android:padding="4dp"
+        android:visibility="gone"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/container_below_image"
+        android:background="@drawable/rldownload_square_bg_gray" >
+
+        <TextView
+            android:id="@+id/native_version"
+            android:hint="版本"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:visibility="visible"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/native_function"
+            android:text="功能"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:layout_toRightOf="@id/native_version"
+            android:layout_alignBaseline="@id/app_name"
+            android:layout_marginLeft="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/native_privacy"
+            android:text="隐私"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:layout_toRightOf="@id/native_function"
+            android:layout_alignBaseline="@id/app_name"
+            android:layout_marginLeft="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/native_permission"
+            android:text="权限"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:layout_toRightOf="@id/native_privacy"
+            android:layout_alignBaseline="@id/app_name"
+            android:layout_marginLeft="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/app_name"
+            android:hint="应用"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:visibility="visible"
+            android:layout_marginLeft="4dp"
+            android:layout_toRightOf="@+id/native_permission"
+            android:layout_alignParentTop="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/native_publisher"
+            android:hint="开发者"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            android:layout_below="@id/native_version"
+            android:layout_marginTop="4dp"
+            android:layout_alignParentLeft="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </RelativeLayout>
+
+</RelativeLayout>

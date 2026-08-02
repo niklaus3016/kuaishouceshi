@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="10dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+<ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+    <EditText
+        android:id="@+id/edit_text_url"
+        android:hint="输入打开落地页url"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+    <Button
+        android:id="@+id/cpu_open_activity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="直接唤起落地页测试" />
+
+
+    <Button
+        android:id="@+id/tools_example"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/tools_example" />
+
+    <Button
+        android:id="@+id/news_example"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/news_example" />
+    <Button
+        android:id="@+id/splash_hot_start_example"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:text="@string/splash_hot_start_example" />
+
+    <Button
+        android:id="@+id/cpu_fragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="50dp"
+        android:text="内容联盟Fragment" />
+
+
+    <include layout="@layout/demo_setting_check_list_item" />
+</LinearLayout>
+</ScrollView>
+</LinearLayout>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/cpu_menu_light_mode"
+        android:title="Light Mode" />
+    <item
+        android:id="@+id/cpu_menu_dark_mode"
+        android:title="Dark Mode" />
+    <item
+        android:id="@+id/cpu_menu_small"
+        android:title="小号字体" />
+    <item
+        android:id="@+id/cpu_menu_middle"
+        android:title="中号字体" />
+    <item
+        android:id="@+id/cpu_menu_big"
+        android:title="大号字体" />
+
+    <item
+        android:id="@+id/cpu_menu_switch"
+        android:title="限制个性化内容" />
+</menu>

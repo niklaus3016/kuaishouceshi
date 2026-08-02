@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:background="#fdfefa"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent" >
+
+	<RelativeLayout
+		android:id="@+id/cpu_video_container"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent" />
+
+	<LinearLayout
+		android:id="@+id/settings"
+		android:orientation="horizontal"
+		android:visibility="gone"
+		android:background="#FFDDDDDD"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent" >
+
+		<TextView
+			android:text="APPSID:"
+			android:layout_margin="8dp"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" />
+		<EditText
+			android:id="@+id/appsid"
+			android:hint="d77e414"
+			android:layout_margin="8dp"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content" />
+
+	</LinearLayout>
+    
+</RelativeLayout>

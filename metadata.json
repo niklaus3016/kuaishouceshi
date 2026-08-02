@@ -1,0 +1,5 @@
+{
+  "name": "广告变现系统",
+  "description": "基于GroMore H5 SDK的广告收益管理系统，支持员工号登录、金币收益统计及记录查看。",
+  "requestFramePermissions": []
+}

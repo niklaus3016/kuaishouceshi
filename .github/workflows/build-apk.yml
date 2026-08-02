@@ -1,0 +1,232 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-debug:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build Vue3 project
+      run: npm run build
+      
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        cache: 'gradle'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Grant execute permission for gradlew
+      run: chmod +x android/gradlew
+      
+    - name: Sync to Android platform
+      run: npx cap sync android
+      
+    - name: Decode keystore for debug build
+      if: github.event_name != 'pull_request'
+      env:
+        KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      run: |
+        echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
+        echo "Keystore file size: $(ls -l android/app/release.keystore | awk '{print $5}') bytes"
+        
+    - name: Extract SHA1 from keystore for debug
+      if: github.event_name != 'pull_request'
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      run: |
+        if [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
+          echo "ERROR: KEYSTORE_PASSWORD or KEY_ALIAS secret is not set"
+          exit 1
+        fi
+        
+        echo ""
+        echo "========================================"
+        echo "==== Debug Build: Extract SHA1 ========"
+        echo "========================================"
+        
+        if keytool_output=$(keytool -list -v -keystore android/app/release.keystore -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" 2>&1); then
+          sha1_value=$(echo "$keytool_output" | grep "SHA1" | awk '{print $2}')
+          echo "SHA1: $sha1_value"
+          echo "SHA1 (no colon): $(echo $sha1_value | tr -d ':')"
+        else
+          echo "ERROR: Failed to extract SHA1"
+          echo "$keytool_output"
+        fi
+        echo "======================================"
+        
+    - name: Build Debug APK
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      run: |
+        cd android
+        ./gradlew assembleDebug -PKEYSTORE_PASSWORD="$KEYSTORE_PASSWORD" -PKEY_ALIAS="$KEY_ALIAS"
+        
+    - name: Calculate Debug APK SHA1
+      run: |
+        echo "========================================"
+        echo "Debug APK SHA1 Checksum:"
+        echo "========================================"
+        sha1sum android/app/build/outputs/apk/debug/app-debug.apk
+        echo ""
+        echo "Debug APK MD5 Checksum:"
+        md5sum android/app/build/outputs/apk/debug/app-debug.apk
+        echo "========================================"
+        
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+
+  build-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build Vue3 project
+      run: npm run build
+      
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        cache: 'gradle'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Grant execute permission for gradlew
+      run: chmod +x android/gradlew
+      
+    - name: Sync to Android platform
+      run: npx cap sync android
+      
+    - name: Decode keystore
+      if: github.event_name != 'pull_request'
+      env:
+        KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      run: |
+        # 将 base64 编码的 keystore 还原为文件
+        echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
+        echo "Keystore file size: $(ls -l android/app/release.keystore | awk '{print $5}') bytes"
+        
+    - name: Extract SHA1 from keystore
+      if: github.event_name != 'pull_request'
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      run: |
+        # 检查Secrets是否存在
+        if [ -z "$KEYSTORE_PASSWORD" ]; then
+          echo "ERROR: KEYSTORE_PASSWORD secret is not set"
+          exit 1
+        fi
+        
+        if [ -z "$KEY_ALIAS" ]; then
+          echo "ERROR: KEY_ALIAS secret is not set"
+          exit 1
+        fi
+        
+        echo "Secrets are properly set"
+        
+        # 提取 SHA1 指纹
+        echo ""
+        echo "========================================"
+        echo "===== SHA1 指纹（小米应用商店用）====="
+        echo "========================================"
+        
+        # 执行keytool命令并捕获错误
+        if ! keytool_output=$(keytool -list -v -keystore android/app/release.keystore -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" 2>&1); then
+          echo "ERROR: Keytool command failed"
+          echo "Full error output:"
+          echo "$keytool_output"
+          # 不退出，继续执行
+        else
+          echo "Keytool command succeeded"
+          sha1_value=$(echo "$keytool_output" | grep "SHA1" | awk '{print $2}')
+          if [ -z "$sha1_value" ]; then
+            echo "ERROR: Failed to extract SHA1, checking full output..."
+            echo "Full keytool output:"
+            echo "$keytool_output"
+          else
+            echo "$sha1_value"
+          fi
+        fi
+        echo "======================================"
+        
+        # 同时输出去掉冒号的版本
+        echo ""
+        echo "========================================"
+        echo "===== 去掉冒号的 SHA1（直接复制）====="
+        echo "========================================"
+        if [ ! -z "$sha1_value" ]; then
+          SHA1_WITHOUT_COLON=$(echo $sha1_value | tr -d ':')
+          echo "$SHA1_WITHOUT_COLON"
+        else
+          echo "ERROR: No SHA1 value to process"
+        fi
+        echo "======================================"
+        echo ""
+        
+    - name: Build Release APK
+      if: github.event_name != 'pull_request'
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      run: |
+        cd android
+        ./gradlew assembleRelease -PKEYSTORE_PASSWORD="$KEYSTORE_PASSWORD" -PKEY_ALIAS="$KEY_ALIAS"
+        
+    - name: Calculate Release APK SHA1
+      run: |
+        echo "========================================"
+        echo "Release APK SHA1 Checksum:"
+        echo "========================================"
+        sha1sum android/app/build/outputs/apk/release/app-release.apk
+        echo ""
+        echo "Release APK MD5 Checksum:"
+        md5sum android/app/build/outputs/apk/release/app-release.apk
+        echo "========================================"
+        
+    - name: Upload Release APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release
+        path: android/app/build/outputs/apk/release/app-release.apk
+        retention-days: 30

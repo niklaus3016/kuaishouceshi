@@ -1,0 +1,99 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace "com.yuexuxingzuo.app"
+    compileSdk rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.yuexuxingzuo.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        release {
+            storeFile file('release.keystore')
+            if (project.hasProperty('KEYSTORE_PASSWORD')) {
+                storePassword project.property('KEYSTORE_PASSWORD')
+            }
+            if (project.hasProperty('KEY_ALIAS')) {
+                keyAlias project.property('KEY_ALIAS')
+            }
+            if (project.hasProperty('KEYSTORE_PASSWORD')) {
+                keyPassword project.property('KEYSTORE_PASSWORD')
+            }
+        }
+        debug {
+            storeFile file('release.keystore')
+            if (project.hasProperty('KEYSTORE_PASSWORD')) {
+                storePassword project.property('KEYSTORE_PASSWORD')
+            }
+            if (project.hasProperty('KEY_ALIAS')) {
+                keyAlias project.property('KEY_ALIAS')
+            }
+            if (project.hasProperty('KEYSTORE_PASSWORD')) {
+                keyPassword project.property('KEYSTORE_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+    
+    // 百度广告 SDK
+    implementation(name:'Baidu_MobAds_SDK-release_v9.432',ext:'aar')
+    implementation(name:'Baidu_MobAds_Tools_SDK-release_v3.1',ext:'aar')
+    
+    // 百度广告 SDK 依赖的 JAR 文件
+    implementation files('libs/android-query-full.0.26.7.jar')
+    implementation files('libs/okhttp-3.9.0.jar')
+    
+    // 百度广告 SDK 依赖
+    implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
+    implementation 'com.google.android.gms:play-services-appset:16.0.2'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'com.google.android.material:material:1.11.0'
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

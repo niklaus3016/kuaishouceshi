@@ -1,0 +1,151 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/native_outer_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp"
+    android:background="@android:color/white">
+    <ImageView android:id="@+id/native_icon_image"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:background="#FFFFFF"
+        android:scaleType="centerCrop"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        />
+
+    <com.baidu.mobads.sdk.api.BDMarketingTextView
+        android:id="@+id/native_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="标题"
+        android:layout_marginLeft="74dp"
+        android:textSize="16sp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:textColor="@color/black" />
+
+    <TextView android:id="@+id/native_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="74dp"
+        android:layout_marginTop="4dp"
+        android:textSize="14sp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:hint="内容描述"
+        android:layout_below="@+id/native_title"
+        android:layout_alignParentLeft="true"
+        android:textColor="@color/black" />
+
+    <ImageView
+        android:id="@+id/close"
+        android:src="@drawable/ico_close_light"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_width="16dp"
+        android:layout_height="16dp" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/ghost_vi"
+        android:layout_margin="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/native_icon_image">
+        <!-- 视频控件大小比例设置为16:9-->
+        <LinearLayout
+            android:id="@+id/ccc"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintDimensionRatio="16:9">
+            <com.baidu.mobads.sdk.api.XNativeView
+                android:id="@+id/native_main_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+
+    <TextView android:id="@+id/native_brand_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="广告的品牌名称"
+        android:textSize="12sp"
+        android:layout_marginTop="4dp"
+        android:layout_below="@+id/ghost_vi"
+        android:layout_alignParentLeft="true"
+        android:textColor="@color/gray" />
+
+    <TextView
+        android:id="@+id/native_version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ghost_vi"
+        android:layout_toRightOf="@id/native_brand_name"
+        android:layout_marginTop="4dp"
+        android:layout_marginLeft="5dp"
+        android:hint="版本号"
+        android:textColor="@color/gray"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/native_privacy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ghost_vi"
+        android:layout_toRightOf="@id/native_publisher"
+        android:layout_marginTop="4dp"
+        android:layout_marginLeft="5dp"
+        android:hint="隐私"
+        android:textColor="@color/gray"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/native_permission"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ghost_vi"
+        android:layout_toRightOf="@id/native_privacy"
+        android:layout_marginTop="4dp"
+        android:layout_marginLeft="5dp"
+        android:hint="权限"
+        android:textColor="@color/gray"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/native_publisher"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ghost_vi"
+        android:layout_toRightOf="@id/native_version"
+        android:layout_marginTop="4dp"
+        android:layout_marginLeft="5dp"
+        android:hint="开发者"
+        android:textColor="@color/gray"
+        android:textSize="12sp" />
+
+    <ImageView
+        android:id="@+id/native_baidulogo"
+        android:layout_width="13dp"
+        android:layout_height="13dp"
+        android:scaleType="fitXY"
+        android:layout_marginTop="4dp"
+        android:layout_toLeftOf="@id/native_adlogo"
+        android:layout_below="@id/native_publisher"/>
+
+    <ImageView
+        android:id="@+id/native_adlogo"
+        android:layout_width="25dp"
+        android:layout_height="13dp"
+        android:layout_marginTop="4dp"
+        android:layout_below="@id/native_publisher"
+        android:layout_alignParentRight="true" />
+
+</RelativeLayout>

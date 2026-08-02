@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android" >
+<!-- 这个xml文件用于使按钮变为圆角，背景为蓝色 -->
+    <item >
+        <shape >
+            <solid android:color="#2a90d7" />
+            <corners android:radius="12dp"/>
+        </shape>
+    </item>
+</selector>
