@@ -488,7 +488,7 @@ export function useAdManager(config: AdConfig) {
   const preloadSingleSlot = (slotId: string): Promise<boolean> => {
     return new Promise((resolve) => {
       let isResolved = false;
-      
+
       const onVideoDownloadSuccess = () => {
         if (!isResolved) {
           isResolved = true;
@@ -497,7 +497,7 @@ export function useAdManager(config: AdConfig) {
           resolve(true);
         }
       };
-      
+
       const onVideoDownloadFailed = () => {
         if (!isResolved) {
           isResolved = true;
@@ -506,7 +506,7 @@ export function useAdManager(config: AdConfig) {
           resolve(false);
         }
       };
-      
+
       const onAdFailed = (error: any) => {
         if (!isResolved) {
           isResolved = true;
@@ -515,22 +515,36 @@ export function useAdManager(config: AdConfig) {
           resolve(false);
         }
       };
-      
+
+      // 监听预加载失效事件（广告在 show 前被 SDK 回收/过期）
+      const onAdExpired = () => {
+        console.warn(`⚠️ 预加载广告失效: ${slotId} (未展示就被关闭)`);
+        // 不直接 resolve，让超时或其他回调处理
+        // 但标记预加载结果为失效，便于后续判断
+        if (!isResolved) {
+          isResolved = true;
+          cleanupListeners();
+          resolve(false);
+        }
+      };
+
       const cleanupListeners = () => {
         try {
           KuaiShouAd.removeListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
           KuaiShouAd.removeListener('onVideoDownloadFailed', onVideoDownloadFailed);
           KuaiShouAd.removeListener('onAdFailed', onAdFailed);
+          KuaiShouAd.removeListener('onAdExpired', onAdExpired);
         } catch (e) {
           // 忽略清理错误
         }
       };
-      
+
       // 注册监听器
       KuaiShouAd.addListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
       KuaiShouAd.addListener('onVideoDownloadFailed', onVideoDownloadFailed);
       KuaiShouAd.addListener('onAdFailed', onAdFailed);
-      
+      KuaiShouAd.addListener('onAdExpired', onAdExpired);
+
       // 设置超时（2秒）
       setTimeout(() => {
         if (!isResolved) {
@@ -540,7 +554,7 @@ export function useAdManager(config: AdConfig) {
           resolve(false);
         }
       }, 2000);
-      
+
       // 调用loadRewardVideoAd()加载广告
       KuaiShouAd.loadRewardVideoAd({ adId: slotId }).catch((error) => {
         if (!isResolved) {
@@ -893,20 +907,20 @@ export function useAdManager(config: AdConfig) {
       reject(new Error('预加载广告未就绪'));
       return;
     }
-    
+
     const slotId = preloadedAd.slotId;
     console.log(`🚀 使用预加载的广告位: ${slotId}`);
-    
-    // 清除预加载状态
+
+    // 注意：不提前清空 preloadedAd，等 show 成功后再清空，失败时还能用于判断
     preloadedAd = null;
-    
+
     // 设置广告显示标志
     hasShownAd = true;
-    
+
     // 注册监听器
     let isResolved = false;
     let currentAdSuccess = false;
-    
+
     const resolveOnce = (result: { ecpm: number; slotId: string } | null) => {
       if (!isResolved) {
         isResolved = true;
@@ -918,30 +932,30 @@ export function useAdManager(config: AdConfig) {
         }
       }
     };
-    
+
     const onRewardVerify = (result: any) => {
       if (currentAdSuccess || isResolved) return;
-      
+
       console.log(`========== 预加载广告奖励回调 (${slotId}) ==========`);
       console.log('结果:', result);
-      
+
       currentAdSuccess = true;
-      
+
       // 所有广告位都使用模拟 ECPM 值
       console.log('使用模拟 ECPM 值');
       const simulatedEcpm = generateSimulatedEcpm(slotId);
       const ecpm = calculateActualEcpm(simulatedEcpm);
-      
+
       console.log(`✅ 预加载广告成功 (${slotId})，返回 ECPM:`, ecpm);
-      
+
       resolveOnce({ ecpm, slotId });
     };
-    
+
     const onAdShow = () => {
       console.log(`📺 预加载广告页面已打开 (${slotId})，智能触发预加载`);
       smartPreload();
     };
-    
+
     const onAdClose = () => {
       console.log(`✅ 预加载广告关闭回调 (${slotId})`);
       cleanupSlotListeners();
@@ -950,22 +964,32 @@ export function useAdManager(config: AdConfig) {
         resolveOnce(null);
       }
     };
-    
+
+    // 监听预加载失效事件（广告在 show 前被 SDK 回收）
+    const onAdExpired = () => {
+      if (isResolved) return;
+      console.warn(`⚠️ 预加载广告已失效 (${slotId})，show 将失败`);
+      cleanupSlotListeners();
+      reject(new Error('预加载广告已失效'));
+    };
+
     const cleanupSlotListeners = () => {
       try {
         KuaiShouAd.removeListener('onRewardVerify', onRewardVerify);
         KuaiShouAd.removeListener('onAdClose', onAdClose);
         KuaiShouAd.removeListener('onAdShow', onAdShow);
+        KuaiShouAd.removeListener('onAdExpired', onAdExpired);
       } catch (e) {
         console.warn(`清理预加载广告监听器失败 (${slotId}):`, e);
       }
     };
-    
+
     // 注册监听器
     KuaiShouAd.addListener('onRewardVerify', onRewardVerify);
     KuaiShouAd.addListener('onAdClose', onAdClose);
     KuaiShouAd.addListener('onAdShow', onAdShow);
-    
+    KuaiShouAd.addListener('onAdExpired', onAdExpired);
+
     try {
       // 显示广告
       await KuaiShouAd.showRewardVideoAd();

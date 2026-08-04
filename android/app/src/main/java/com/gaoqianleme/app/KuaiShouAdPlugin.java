@@ -44,6 +44,9 @@ public class KuaiShouAdPlugin extends Plugin {
     /** 防止 onRewardVerify 两个重载重复触发 */
     private boolean mRewardHandled;
 
+    /** 广告是否已真正展示（用于区分"正常关闭"和"未展示就失效"） */
+    private volatile boolean isAdShown;
+
     // ================================================================
     // 对外 Capacitor 方法
     // ================================================================
@@ -65,6 +68,7 @@ public class KuaiShouAdPlugin extends Plugin {
         }
         mCurrentPosId = posId;
         mRewardHandled = false; // 重置激励回调标志位
+        isAdShown = false;      // 重置展示标志位
 
         Log.d(TAG, "加载激励视频广告, posId: " + posId + " (raw: " + adId + ")");
 
@@ -93,7 +97,7 @@ public class KuaiShouAdPlugin extends Plugin {
 
     @PluginMethod
     public void showRewardVideoAd(PluginCall call) {
-        Log.d(TAG, "显示激励视频广告");
+        Log.d(TAG, "显示激励视频广告, mRewardVideoAd=" + mRewardVideoAd);
 
         Activity activity = getActivity();
         if (activity == null) {
@@ -109,8 +113,9 @@ public class KuaiShouAdPlugin extends Plugin {
         activity.runOnUiThread(() -> {
             try {
                 pendingShowCall = call;
+                isAdShown = true; // 标记为已展示
 
-                // 设置监听（每次 show 前重新设置，避免丢失）
+                // 设置监听（在 show 前挂载，与官方Demo一致，避免预加载阶段误触发）
                 setRewardListener(mRewardVideoAd);
 
                 // 展示配置：默认竖屏播放（与 App 屏幕方向一致）
@@ -119,10 +124,12 @@ public class KuaiShouAdPlugin extends Plugin {
                         .build();
 
                 mRewardVideoAd.showRewardVideoAd(activity, videoPlayConfig);
+                Log.d(TAG, "showRewardVideoAd 调用完成, 等待回调");
                 // showRewardVideoAd 异步展示，真正结果通过回调通知，不在此立刻 resolve
             } catch (Exception e) {
                 Log.e(TAG, "展示激励视频广告异常: " + e.getMessage(), e);
                 pendingShowCall = null;
+                isAdShown = false;
                 call.reject("展示广告异常: " + e.getMessage());
             }
         });
@@ -244,7 +251,9 @@ public class KuaiShouAdPlugin extends Plugin {
         KsRewardVideoAd first = adList.get(0);
         if (first != null) {
             mRewardVideoAd = first;
-            setRewardListener(first);
+            // 注意：不在此处挂载 setRewardListener，避免预加载阶段 SDK 触发 onPageDismiss
+            // 时把缓存清空。监听器统一在 showRewardVideoAd 调用前挂载（与官方Demo一致）。
+            Log.d(TAG, "广告已缓存, posId=" + mCurrentPosId + " ad=" + first);
         }
     }
 
@@ -274,21 +283,33 @@ public class KuaiShouAdPlugin extends Plugin {
 
             @Override
             public void onPageDismiss() {
-                Log.d(TAG, "激励视频广告关闭 (onPageDismiss)");
-                notifyListeners("onAdClose", new JSObject());
+                Log.d(TAG, "激励视频广告关闭 (onPageDismiss), isAdShown=" + isAdShown);
 
-                // 如果 onRewardVerify 没有触发（例如用户跳过），则广告关闭时 resolve pendingShowCall
-                if (pendingShowCall != null) {
-                    Log.d(TAG, "广告关闭时 resolve pendingShowCall（未获得激励）");
-                    JSObject result = new JSObject();
-                    result.put("rewardVerify", false);
-                    result.put("ecpm", 0);
-                    pendingShowCall.resolve(result);
-                    pendingShowCall = null;
+                if (isAdShown) {
+                    // 正常关闭流程：广告已展示，用户看完或跳过
+                    notifyListeners("onAdClose", new JSObject());
+
+                    // 如果 onRewardVerify 没有触发（例如用户跳过），则广告关闭时 resolve pendingShowCall
+                    if (pendingShowCall != null) {
+                        Log.d(TAG, "广告关闭时 resolve pendingShowCall（未获得激励）");
+                        JSObject result = new JSObject();
+                        result.put("rewardVerify", false);
+                        result.put("ecpm", 0);
+                        pendingShowCall.resolve(result);
+                        pendingShowCall = null;
+                    }
+                } else {
+                    // 未展示就失效：预加载的广告在 show 之前被 SDK 回收/过期
+                    Log.w(TAG, "广告未展示就被关闭（预加载失效），通知前端 onAdExpired");
+                    JSObject expired = new JSObject();
+                    expired.put("posId", mCurrentPosId);
+                    expired.put("reason", "expired_before_show");
+                    notifyListeners("onAdExpired", expired);
                 }
 
-                // 展示完毕后清空缓存广告，避免重复展示过期素材
+                // 展示完毕或失效后清空缓存广告，避免重复展示过期素材
                 mRewardVideoAd = null;
+                isAdShown = false;
             }
 
             @Override
