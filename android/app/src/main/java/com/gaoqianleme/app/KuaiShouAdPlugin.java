@@ -30,22 +30,29 @@ public class KuaiShouAdPlugin extends Plugin {
 
     private static final String TAG = "KuaiShouAdPlugin";
 
-    /** 缓存的激励视频广告对象 */
+    /** 正在展示的广告对象（setRewardListener 在此对象上，其 onPageDismiss 触发时只清空此字段） */
     @Nullable
-    private KsRewardVideoAd mRewardVideoAd;
+    private KsRewardVideoAd mShowingAd;
 
-    /** 当前加载的广告位 posId（long 型） */
+    /** 预加载缓存的广告对象（loadRewardVideoAd 写入此字段，不含任何监听器） */
+    @Nullable
+    private KsRewardVideoAd mPreloadedAd;
+
+    /** 当前预加载/加载的广告位 posId（long 型） */
     private long mCurrentPosId;
 
-    /** 用于 showRewardVideoAd 时 resolve 的 pending call（兼容旧逻辑，保持可选） */
+    /** 用于 showRewardVideoAd 时 resolve 的 pending call */
     @Nullable
     private PluginCall pendingShowCall;
 
     /** 防止 onRewardVerify 两个重载重复触发 */
     private boolean mRewardHandled;
 
-    /** 广告是否已真正展示（用于区分"正常关闭"和"未展示就失效"） */
+    /** 是否有广告正在展示（仅由 showRewardVideoAd / onPageDismiss 管理，loadRewardVideoAd 不修改） */
     private volatile boolean isAdShown;
+
+    /** 当前展示的广告位 posId（在 showRewardVideoAd 时快照，不受后续预加载影响） */
+    private long mShowingPosId;
 
     // ================================================================
     // 对外 Capacitor 方法
@@ -67,8 +74,7 @@ public class KuaiShouAdPlugin extends Plugin {
             return;
         }
         mCurrentPosId = posId;
-        mRewardHandled = false; // 重置激励回调标志位
-        isAdShown = false;      // 重置展示标志位
+        // 注意：不在此处重置 isAdShown / mRewardHandled —— 这两个标志仅属于展示流程
 
         Log.d(TAG, "加载激励视频广告, posId: " + posId + " (raw: " + adId + ")");
 
@@ -97,7 +103,7 @@ public class KuaiShouAdPlugin extends Plugin {
 
     @PluginMethod
     public void showRewardVideoAd(PluginCall call) {
-        Log.d(TAG, "显示激励视频广告, mRewardVideoAd=" + mRewardVideoAd);
+        Log.d(TAG, "显示激励视频广告, mPreloadedAd=" + mPreloadedAd + " mShowingAd=" + mShowingAd);
 
         Activity activity = getActivity();
         if (activity == null) {
@@ -105,31 +111,41 @@ public class KuaiShouAdPlugin extends Plugin {
             return;
         }
 
-        if (mRewardVideoAd == null) {
+        if (mPreloadedAd == null) {
             call.reject("广告未加载");
             return;
         }
 
         activity.runOnUiThread(() -> {
             try {
+                // 核心：将预加载广告移交给展示中，同时清空预加载引用
+                mShowingAd = mPreloadedAd;
+                mPreloadedAd = null;
+
+                // 快照展示广告的 posId（防止展示期间被预加载覆盖）
+                mShowingPosId = mCurrentPosId;
+
+                // 重置展示相关标志位（仅在 show 时重置）
+                mRewardHandled = false;
+                isAdShown = true;
+
                 pendingShowCall = call;
-                isAdShown = true; // 标记为已展示
 
-                // 设置监听（在 show 前挂载，与官方Demo一致，避免预加载阶段误触发）
-                setRewardListener(mRewardVideoAd);
+                // 设置监听器（仅挂在正在展示的广告上）
+                setRewardListener(mShowingAd);
 
-                // 展示配置：默认竖屏播放（与 App 屏幕方向一致）
+                // 展示配置：默认竖屏播放
                 KsVideoPlayConfig videoPlayConfig = new KsVideoPlayConfig.Builder()
                         .showLandscape(false)
                         .build();
 
-                mRewardVideoAd.showRewardVideoAd(activity, videoPlayConfig);
+                mShowingAd.showRewardVideoAd(activity, videoPlayConfig);
                 Log.d(TAG, "showRewardVideoAd 调用完成, 等待回调");
-                // showRewardVideoAd 异步展示，真正结果通过回调通知，不在此立刻 resolve
             } catch (Exception e) {
                 Log.e(TAG, "展示激励视频广告异常: " + e.getMessage(), e);
-                pendingShowCall = null;
+                mShowingAd = null;
                 isAdShown = false;
+                pendingShowCall = null;
                 call.reject("展示广告异常: " + e.getMessage());
             }
         });
@@ -138,7 +154,7 @@ public class KuaiShouAdPlugin extends Plugin {
     @PluginMethod
     public void isReady(PluginCall call) {
         JSObject result = new JSObject();
-        boolean ready = mRewardVideoAd != null;
+        boolean ready = mPreloadedAd != null;
         result.put("ready", ready);
         call.resolve(result);
     }
@@ -250,10 +266,10 @@ public class KuaiShouAdPlugin extends Plugin {
         }
         KsRewardVideoAd first = adList.get(0);
         if (first != null) {
-            mRewardVideoAd = first;
-            // 注意：不在此处挂载 setRewardListener，避免预加载阶段 SDK 触发 onPageDismiss
-            // 时把缓存清空。监听器统一在 showRewardVideoAd 调用前挂载（与官方Demo一致）。
-            Log.d(TAG, "广告已缓存, posId=" + mCurrentPosId + " ad=" + first);
+            // 只写入预加载缓存，绝不影响正在展示的广告
+            mPreloadedAd = first;
+            Log.d(TAG, "预加载广告已缓存, posId=" + mCurrentPosId + " ad=" + first
+                    + " mShowingAd=" + mShowingAd);
         }
     }
 
@@ -299,7 +315,7 @@ public class KuaiShouAdPlugin extends Plugin {
                         pendingShowCall = null;
                     }
                 } else {
-                    // 未展示就失效：预加载的广告在 show 之前被 SDK 回收/过期
+                    // 未展示就被 SDK 回收/过期：通知前端预加载失效
                     Log.w(TAG, "广告未展示就被关闭（预加载失效），通知前端 onAdExpired");
                     JSObject expired = new JSObject();
                     expired.put("posId", mCurrentPosId);
@@ -307,8 +323,9 @@ public class KuaiShouAdPlugin extends Plugin {
                     notifyListeners("onAdExpired", expired);
                 }
 
-                // 展示完毕或失效后清空缓存广告，避免重复展示过期素材
-                mRewardVideoAd = null;
+                // 只清空正在展示的广告，不影响预加载缓存
+                // 预加载缓存 (mPreloadedAd) 由 loadRewardVideoAd 自己管理
+                mShowingAd = null;
                 isAdShown = false;
             }
 
@@ -394,6 +411,9 @@ public class KuaiShouAdPlugin extends Plugin {
         }
         mRewardHandled = true;
 
+        // 使用快照的展示广告 posId（防止展示期间被预加载覆盖）
+        long showPosId = mShowingPosId;
+
         JSObject result = new JSObject();
         result.put("rewardVerify", true);
 
@@ -405,19 +425,16 @@ public class KuaiShouAdPlugin extends Plugin {
                 } catch (Throwable ignore) {
                 }
             }
-            // 常见字段：反作弊标记
             Object isFraud = extraMap.get(ApiConst.EXTRA_KEY_FRAUD);
             Object fraudCode = extraMap.get(ApiConst.EXTRA_KEY_ERRORCODE);
             if (isFraud != null) result.put("IS_FRAUD", isFraud);
             if (fraudCode != null) result.put("IS_FRAUD_ERROR_CODE", fraudCode);
         }
 
-        // eCPM：快手侧不在激励回调直接给 eCPM 数值（一般走 S2S 返给服务端），
-        // 因此此处默认传 0，前端 useAdManager 会根据广告位生成模拟 eCPM。
         result.put("ecpm", 0);
-        result.put("posId", mCurrentPosId);
+        result.put("posId", showPosId);
 
-        Log.d(TAG, "激励回调结果: rewardVerify=true ecpm=0 posId=" + mCurrentPosId);
+        Log.d(TAG, "激励回调结果: rewardVerify=true ecpm=0 posId=" + showPosId);
 
         notifyListeners("onRewardVerify", result);
 
