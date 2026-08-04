@@ -50,3 +50,6 @@ tmp/
 
 # 系统
 Thumbs.db
+
+# 快手 SDK 参考文档与 demo（仅本地参考用，不应提交）
+KsAdSdk_ad/

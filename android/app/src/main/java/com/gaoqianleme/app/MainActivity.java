@@ -1,4 +1,4 @@
-package com.yuexuxingzuo.app;
+package com.mijingxingzuo.app;
 
 import android.os.Bundle;
 import android.webkit.WebSettings;
@@ -16,7 +16,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         // 注册插件（保持原来的顺序）
-        registerPlugin(BaiduAdPlugin.class);
+        registerPlugin(KuaiShouAdPlugin.class);
         registerPlugin(TTSPlugin.class);
         registerPlugin(RiskCheckPlugin.class);
         registerPlugin(AudioPlugin.class);

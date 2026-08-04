@@ -11,6 +11,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true"
         tools:replace="android:allowBackup,android:label">
 
         <activity
@@ -28,15 +29,20 @@
 
         </activity>
 
+        <!-- 快手广告联盟返回页面（处理 ksad:// 和 kwai.union:// scheme 回调） -->
         <activity
-            android:name="com.baidu.mobads.sdk.api.AppActivity"
-            android:configChanges="screenSize|keyboard|keyboardHidden|orientation"
-            android:theme="@android:style/Theme.NoTitleBar" />
-
-        <activity
-            android:name="com.baidu.mobads.sdk.api.MobRewardVideoActivity"
-            android:configChanges="screenSize|orientation|keyboardHidden|uiMode"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+            android:name=".KsReturnBackActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ksad" />
+                <data android:scheme="kwai.union" />
+            </intent-filter>
+        </activity>
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -47,31 +53,28 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
-
-        <provider
-            android:name="com.baidu.mobads.sdk.api.BdFileProvider"
-            android:authorities="${applicationId}.bd.provider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/bd_file_paths" />
-        </provider>
     </application>
 
-    <!-- Permissions -->
+    <!-- 基础网络权限 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+
+    <!-- 读写存储（非必须，建议开启以提升广告体验） -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    
-    <!-- 百度广告 SDK 权限 -->
+
+    <!-- 快手广告 SDK 推荐权限 -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- QUERY_ALL_PACKAGES：Android R+ 判定广告对应 App 是否已安装，需在隐私文档中声明 -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+    <!-- 通知栏权限（非必须，用于展示下载通知） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

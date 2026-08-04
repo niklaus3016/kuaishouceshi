@@ -19,3 +19,13 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# ===== 快手广告 SDK 混淆规则（官方要求，请勿修改）=====
+-keep class com.kwad.sdk.** { *; }
+-dontwarn com.kwad.sdk.**
+-keep class com.kwad.open.** { *; }
+-dontwarn com.kwad.open.**
+# 防止 Gson / OkHttp 相关类被混淆
+-keep class com.google.gson.** { *; }
+-keepattributes Signature
+-keepattributes *Annotation*

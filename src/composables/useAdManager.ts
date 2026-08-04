@@ -1,13 +1,6 @@
 import { ref, onMounted, onUnmounted } from 'vue';
-import BaiduAd from '../plugins/BaiduAdPlugin';
+import KuaiShouAd from '../plugins/KuaiShouAdPlugin';
 import { sendRedPacket, recordAdView, getPoolStatus, getUserTickets } from '../api/apiService';
-
-declare global {
-  interface Window {
-    baidu?: any;
-    _baidu?: any;
-  }
-}
 
 interface AdConfig {
   appId: string;
@@ -48,27 +41,28 @@ export function useAdManager(config: AdConfig) {
   let isPreloading = false; // 是否正在预加载
   let preloadingPromise: Promise<void> | null = null; // 预加载Promise，用于等待预加载完成
   
-  // 广告位分组配置（月序星座）
+  // 广告位分组配置（快手联盟 - 激励视频 posId）
+  // 已替换为快手联盟后台申请的 12 个真实激励视频 posId，按高→低保价档位分到 4 个 group。
   const AD_GROUPS = {
     group1: [
-      '19361425', // 保价900
-      '19361441', // 保价600
-      '19361453'  // 保价400
+      '35383000001', // group1 第1位：保价 1800（ECPM 1620-1800）
+      '35383000003', // group1 第2位：保价 1500（ECPM 1350-1500）
+      '35383000005'  // group1 第3位：保价 1000（ECPM 900-1000）
     ],
     group2: [
-      '19950604', // 保价300
-      '20058408', // 保价230
-      '19361461'  // 保价200
+      '35383000007', // group2 第1位：保价 800（ECPM 720-800）
+      '35383000009', // group2 第2位：保价 600（ECPM 540-600）
+      '35383000011'  // group2 第3位：保价 400（ECPM 360-400）
     ],
     group3: [
-      '20058409', // 保价180
-      '19361483', // 保价150
-      '19361488'  // 保价130
+      '35383000013', // group3 第1位：保价 300（ECPM 270-300）
+      '35383000015', // group3 第2位：保价 200（ECPM 180-200）
+      '35383000019'  // group3 第3位：保价 100（ECPM 90-100）
     ],
     group4: [
-      '19361502', // 保价80
-      '19361510', // 竞价
-      '19361517'  // 保价0
+      '35383000021', // group4 第1位：保价 50（ECPM 45-50）
+      '35383000023', // group4 第2位：竞价（ECPM 20-30）
+      '35383000025'  // group4 第3位：保价 0 / 填充位（ECPM 20-30）
     ]
   }; // 共12个广告位
   
@@ -175,22 +169,22 @@ export function useAdManager(config: AdConfig) {
 
   const generateSimulatedEcpm = (slotId: string): number => {
     const ecpmRanges: { [key: string]: [number, number] } = {
-      // group1 - 保价900, 600, 400
-      '19361425': [810, 900],    // 保价900
-      '19361441': [540, 600],    // 保价600
-      '19361453': [360, 400],    // 保价400
-      // group2 - 保价300, 230, 200
-      '19950604': [270, 300],    // 保价300
-      '20058408': [207, 230],    // 保价230
-      '19361461': [180, 200],    // 保价200
-      // group3 - 保价180, 150, 130
-      '20058409': [162, 180],    // 保价180
-      '19361483': [135, 150],    // 保价150
-      '19361488': [117, 130],    // 保价130
-      // group4 - 保价80, 竞价, 保价0
-      '19361502': [72, 80],      // 保价80
-      '19361510': [20, 30],      // 竞价
-      '19361517': [20, 30]       // 保价0
+      // group1 - 高保价
+      '35383000001': [1620, 1800],  // 保价 1800
+      '35383000003': [1350, 1500],  // 保价 1500
+      '35383000005': [900, 1000],   // 保价 1000
+      // group2 - 中保价
+      '35383000007': [720, 800],    // 保价 800
+      '35383000009': [540, 600],    // 保价 600
+      '35383000011': [360, 400],    // 保价 400
+      // group3 - 低保价
+      '35383000013': [270, 300],    // 保价 300
+      '35383000015': [180, 200],    // 保价 200
+      '35383000019': [90, 100],     // 保价 100
+      // group4 - 次低 / 竞价 / 底价
+      '35383000021': [45, 50],      // 保价 50
+      '35383000023': [20, 30],      // 竞价
+      '35383000025': [20, 30]       // 保价 0（填充位）
     };
 
     const range = ecpmRanges[slotId];
@@ -199,7 +193,7 @@ export function useAdManager(config: AdConfig) {
   };
 
   const isBiddingSlot = (slotId: string): boolean => {
-    const biddingSlots = ['19361510'];
+    const biddingSlots = ['35383000023']; // group4 第2位为竞价位
     return biddingSlots.includes(slotId);
   };
 
@@ -264,7 +258,7 @@ export function useAdManager(config: AdConfig) {
             // 检查广告是否就绪
             console.log(`🔍 检查广告就绪状态 (${slotId})...`);
             try {
-              const readyStatus = await BaiduAd.isReady();
+              const readyStatus = await KuaiShouAd.isReady();
               console.log(`📊 广告就绪状态 (${slotId}):`, readyStatus);
               
               if (!readyStatus.ready) {
@@ -277,7 +271,7 @@ export function useAdManager(config: AdConfig) {
             console.log(`✅ 广告位加载成功且已就绪 (${slotId})，准备播放`);
             
             // 显示广告
-            BaiduAd.showRewardVideoAd();
+            KuaiShouAd.showRewardVideoAd();
             console.log(`✅ 广告显示命令已发送 (${slotId})`);
           } catch (error) {
             console.error(`❌ 显示广告失败 (${slotId}):`, error);
@@ -307,27 +301,27 @@ export function useAdManager(config: AdConfig) {
         };
         
         // 注册监听器
-        BaiduAd.addListener('onRewardVerify', onRewardVerify);
-        BaiduAd.addListener('onAdFailed', onAdFailed);
-        BaiduAd.addListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
-        BaiduAd.addListener('onVideoDownloadFailed', onVideoDownloadFailed);
-        BaiduAd.addListener('onAdClose', onAdClose);
+        KuaiShouAd.addListener('onRewardVerify', onRewardVerify);
+        KuaiShouAd.addListener('onAdFailed', onAdFailed);
+        KuaiShouAd.addListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
+        KuaiShouAd.addListener('onVideoDownloadFailed', onVideoDownloadFailed);
+        KuaiShouAd.addListener('onAdClose', onAdClose);
         
         // 清理监听器的函数
         const cleanupSlotListeners = () => {
           try {
-            BaiduAd.removeListener('onRewardVerify', onRewardVerify);
-            BaiduAd.removeListener('onAdFailed', onAdFailed);
-            BaiduAd.removeListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
-            BaiduAd.removeListener('onVideoDownloadFailed', onVideoDownloadFailed);
-            BaiduAd.removeListener('onAdClose', onAdClose);
+            KuaiShouAd.removeListener('onRewardVerify', onRewardVerify);
+            KuaiShouAd.removeListener('onAdFailed', onAdFailed);
+            KuaiShouAd.removeListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
+            KuaiShouAd.removeListener('onVideoDownloadFailed', onVideoDownloadFailed);
+            KuaiShouAd.removeListener('onAdClose', onAdClose);
           } catch (e) {
             console.warn(`清理监听器失败 (${slotId}):`, e);
           }
         };
         
         // 加载广告
-        BaiduAd.loadRewardVideoAd({ adId: slotId })
+        KuaiShouAd.loadRewardVideoAd({ adId: slotId })
           .then(() => console.log(`✅ 广告加载请求已发送 (${slotId})`))
           .catch((err: any) => {
             console.error(`❌ 加载广告请求失败 (${slotId}):`, err);
@@ -432,9 +426,9 @@ export function useAdManager(config: AdConfig) {
         
         const cleanupSlot = () => {
           try {
-            BaiduAd.removeListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
-            BaiduAd.removeListener('onVideoDownloadFailed', onVideoDownloadFailed);
-            BaiduAd.removeListener('onAdFailed', onAdFailed);
+            KuaiShouAd.removeListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
+            KuaiShouAd.removeListener('onVideoDownloadFailed', onVideoDownloadFailed);
+            KuaiShouAd.removeListener('onAdFailed', onAdFailed);
           } catch (e) {
             // 忽略清理错误
           }
@@ -443,9 +437,9 @@ export function useAdManager(config: AdConfig) {
         listeners.push({ slotId, cleanup: cleanupSlot });
         
         // 注册监听器
-        BaiduAd.addListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
-        BaiduAd.addListener('onVideoDownloadFailed', onVideoDownloadFailed);
-        BaiduAd.addListener('onAdFailed', onAdFailed);
+        KuaiShouAd.addListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
+        KuaiShouAd.addListener('onVideoDownloadFailed', onVideoDownloadFailed);
+        KuaiShouAd.addListener('onAdFailed', onAdFailed);
         
         // 设置超时（2秒）
         setTimeout(() => {
@@ -457,7 +451,7 @@ export function useAdManager(config: AdConfig) {
         }, 2000);
         
         // 发起请求
-        BaiduAd.loadRewardVideoAd({ adId: slotId }).catch((error) => {
+        KuaiShouAd.loadRewardVideoAd({ adId: slotId }).catch((error) => {
           if (!isSlotResolved && !resolved) {
             isSlotResolved = true;
             console.log(`❌ 并行预加载请求失败: ${slotId}`, error);
@@ -524,18 +518,18 @@ export function useAdManager(config: AdConfig) {
       
       const cleanupListeners = () => {
         try {
-          BaiduAd.removeListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
-          BaiduAd.removeListener('onVideoDownloadFailed', onVideoDownloadFailed);
-          BaiduAd.removeListener('onAdFailed', onAdFailed);
+          KuaiShouAd.removeListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
+          KuaiShouAd.removeListener('onVideoDownloadFailed', onVideoDownloadFailed);
+          KuaiShouAd.removeListener('onAdFailed', onAdFailed);
         } catch (e) {
           // 忽略清理错误
         }
       };
       
       // 注册监听器
-      BaiduAd.addListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
-      BaiduAd.addListener('onVideoDownloadFailed', onVideoDownloadFailed);
-      BaiduAd.addListener('onAdFailed', onAdFailed);
+      KuaiShouAd.addListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
+      KuaiShouAd.addListener('onVideoDownloadFailed', onVideoDownloadFailed);
+      KuaiShouAd.addListener('onAdFailed', onAdFailed);
       
       // 设置超时（2秒）
       setTimeout(() => {
@@ -548,7 +542,7 @@ export function useAdManager(config: AdConfig) {
       }, 2000);
       
       // 调用loadRewardVideoAd()加载广告
-      BaiduAd.loadRewardVideoAd({ adId: slotId }).catch((error) => {
+      KuaiShouAd.loadRewardVideoAd({ adId: slotId }).catch((error) => {
         if (!isResolved) {
           isResolved = true;
           console.log(`❌ 串行预加载请求失败: ${slotId}`, error);
@@ -707,7 +701,7 @@ export function useAdManager(config: AdConfig) {
             // 检查广告是否就绪
             console.log(`🔍 检查广告就绪状态 (${slotId})...`);
             try {
-              const readyStatus = await BaiduAd.isReady();
+              const readyStatus = await KuaiShouAd.isReady();
               console.log(`📊 广告就绪状态 (${slotId}):`, readyStatus);
               
               if (!readyStatus.ready) {
@@ -718,7 +712,7 @@ export function useAdManager(config: AdConfig) {
             }
             
             console.log(`✅ 广告位加载成功且已就绪 (${slotId})，准备播放`);
-            await BaiduAd.showRewardVideoAd();
+            await KuaiShouAd.showRewardVideoAd();
             console.log(`✅ 广告显示命令已发送 (${slotId})`);
           } catch (error) {
             console.error(`❌ 显示广告失败 (${slotId}):`, error);
@@ -742,27 +736,27 @@ export function useAdManager(config: AdConfig) {
         };
         
         // 注册监听器
-        BaiduAd.addListener('onRewardVerify', onRewardVerify);
-        BaiduAd.addListener('onAdFailed', onAdFailed);
-        BaiduAd.addListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
-        BaiduAd.addListener('onVideoDownloadFailed', onVideoDownloadFailed);
-        BaiduAd.addListener('onAdClose', onAdClose);
+        KuaiShouAd.addListener('onRewardVerify', onRewardVerify);
+        KuaiShouAd.addListener('onAdFailed', onAdFailed);
+        KuaiShouAd.addListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
+        KuaiShouAd.addListener('onVideoDownloadFailed', onVideoDownloadFailed);
+        KuaiShouAd.addListener('onAdClose', onAdClose);
         
         // 清理监听器的函数
         const cleanupSlotListeners = () => {
           try {
-            BaiduAd.removeListener('onRewardVerify', onRewardVerify);
-            BaiduAd.removeListener('onAdFailed', onAdFailed);
-            BaiduAd.removeListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
-            BaiduAd.removeListener('onVideoDownloadFailed', onVideoDownloadFailed);
-            BaiduAd.removeListener('onAdClose', onAdClose);
+            KuaiShouAd.removeListener('onRewardVerify', onRewardVerify);
+            KuaiShouAd.removeListener('onAdFailed', onAdFailed);
+            KuaiShouAd.removeListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
+            KuaiShouAd.removeListener('onVideoDownloadFailed', onVideoDownloadFailed);
+            KuaiShouAd.removeListener('onAdClose', onAdClose);
           } catch (e) {
             console.warn(`清理监听器失败 (${slotId}):`, e);
           }
         };
         
         // 加载广告
-        BaiduAd.loadRewardVideoAd({ adId: slotId })
+        KuaiShouAd.loadRewardVideoAd({ adId: slotId })
           .then(() => console.log(`✅ 广告加载请求已发送 (${slotId})`))
           .catch((err: any) => {
             console.error(`❌ 加载广告请求失败 (${slotId}):`, err);
@@ -824,7 +818,7 @@ export function useAdManager(config: AdConfig) {
     listeners.forEach(({ name, handler }) => {
       if (handler) {
         try {
-          BaiduAd.removeListener(name, handler);
+          KuaiShouAd.removeListener(name, handler);
         } catch (e) {
           console.warn(`移除 ${name} 监听器失败:`, e);
         }
@@ -858,59 +852,32 @@ export function useAdManager(config: AdConfig) {
 
     try {
       if (isNativeApp()) {
-        console.log('原生 Android 环境，使用百度原生 SDK');
+        console.log('原生 Android 环境，使用快手原生 SDK');
         isAdSdkReady.value = true;
         isLoaded.value = true;
         preloadAd.value = true;
-        
+
+        // 通知原生：用户已同意隐私协议（会补触发 SDK init）
+        try {
+          await KuaiShouAd.onUserAgreePrivacy?.();
+        } catch (e) {
+          // 忽略：旧版本插件未暴露此方法不影响主流程
+        }
+
         // SDK 加载成功后 500ms 触发预加载
         setTimeout(() => {
           console.log('📱 原生环境 SDK 就绪，开始预加载广告');
           preloadNextAd();
         }, 500);
-        
+
         return;
       }
 
-      if (window.baidu?.mobads) {
-        console.log('百度 H5 广告 SDK 已加载');
-        isAdSdkReady.value = true;
-        isLoaded.value = true;
-        preloadAd.value = true;
-        
-        // SDK 已加载，500ms 后触发预加载
-        setTimeout(() => {
-          console.log('🌐 H5 SDK 已就绪，开始预加载广告');
-          preloadNextAd();
-        }, 500);
-        
-        return;
-      }
-
-      console.log('尝试加载百度 H5 广告 SDK');
-      const script = document.createElement('script');
-      script.src = 'https://mobads.baidu.com/js/mobads.js';
-      script.async = true;
-      script.onload = () => {
-        console.log('百度 H5 广告 SDK 加载成功');
-        isAdSdkReady.value = true;
-        isLoaded.value = true;
-        preloadAd.value = true;
-        window.baidu?.mobads?.setAppId?.(config.appId);
-        
-        // SDK 加载成功后 500ms 触发预加载
-        setTimeout(() => {
-          console.log('🌐 H5 SDK 加载成功，开始预加载广告');
-          preloadNextAd();
-        }, 500);
-      };
-      script.onerror = () => {
-        console.error('百度 H5 广告 SDK 加载失败');
-        isLoaded.value = true;
-        isAdSdkReady.value = false;
-        preloadAd.value = true;
-      };
-      document.head.appendChild(script);
+      // 非原生环境（浏览器预览、H5 页面等）不提供激励视频广告
+      console.log('非原生 Android 环境，快手激励视频广告不可用（仅 Android APK 原生环境可用）');
+      isLoaded.value = true;
+      isAdSdkReady.value = false;
+      preloadAd.value = true;
     } catch (error) {
       console.error('初始化广告 SDK 失败:', error);
       isLoaded.value = true;
@@ -986,22 +953,22 @@ export function useAdManager(config: AdConfig) {
     
     const cleanupSlotListeners = () => {
       try {
-        BaiduAd.removeListener('onRewardVerify', onRewardVerify);
-        BaiduAd.removeListener('onAdClose', onAdClose);
-        BaiduAd.removeListener('onAdShow', onAdShow);
+        KuaiShouAd.removeListener('onRewardVerify', onRewardVerify);
+        KuaiShouAd.removeListener('onAdClose', onAdClose);
+        KuaiShouAd.removeListener('onAdShow', onAdShow);
       } catch (e) {
         console.warn(`清理预加载广告监听器失败 (${slotId}):`, e);
       }
     };
     
     // 注册监听器
-    BaiduAd.addListener('onRewardVerify', onRewardVerify);
-    BaiduAd.addListener('onAdClose', onAdClose);
-    BaiduAd.addListener('onAdShow', onAdShow);
+    KuaiShouAd.addListener('onRewardVerify', onRewardVerify);
+    KuaiShouAd.addListener('onAdClose', onAdClose);
+    KuaiShouAd.addListener('onAdShow', onAdShow);
     
     try {
       // 显示广告
-      await BaiduAd.showRewardVideoAd();
+      await KuaiShouAd.showRewardVideoAd();
       console.log(`✅ 预加载广告显示命令已发送 (${slotId})`);
     } catch (error) {
       console.error(`❌ 显示预加载广告失败 (${slotId}):`, error);
@@ -1250,7 +1217,7 @@ export function useAdManager(config: AdConfig) {
           // 检查广告是否就绪（未过期且缓存成功）
           console.log('🔍 检查广告就绪状态...');
           try {
-            const readyStatus = await BaiduAd.isReady();
+            const readyStatus = await KuaiShouAd.isReady();
             console.log('📊 广告就绪状态:', readyStatus);
             
             if (!readyStatus.ready) {
@@ -1264,7 +1231,7 @@ export function useAdManager(config: AdConfig) {
           }
           
           console.log('✅ 广告位加载成功且已就绪，准备播放');
-          await BaiduAd.showRewardVideoAd();
+          await KuaiShouAd.showRewardVideoAd();
           console.log('✅ 广告显示命令已发送');
         } catch (error) {
           console.error('❌ 显示广告失败:', error);
@@ -1308,14 +1275,14 @@ export function useAdManager(config: AdConfig) {
       videoDownloadFailedListener = onVideoDownloadFailed;
       adCloseListener = onAdClose;
       
-      BaiduAd.addListener('onAdLoaded', onAdLoaded);
-      BaiduAd.addListener('onRewardVerify', onRewardVerify);
-      BaiduAd.addListener('onAdFailed', onAdFailed);
-      BaiduAd.addListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
-      BaiduAd.addListener('onVideoDownloadFailed', onVideoDownloadFailed);
-      BaiduAd.addListener('onAdClose', onAdClose);
+      KuaiShouAd.addListener('onAdLoaded', onAdLoaded);
+      KuaiShouAd.addListener('onRewardVerify', onRewardVerify);
+      KuaiShouAd.addListener('onAdFailed', onAdFailed);
+      KuaiShouAd.addListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
+      KuaiShouAd.addListener('onVideoDownloadFailed', onVideoDownloadFailed);
+      KuaiShouAd.addListener('onAdClose', onAdClose);
       
-      BaiduAd.loadRewardVideoAd({ adId: selectedSlotId })
+      KuaiShouAd.loadRewardVideoAd({ adId: selectedSlotId })
         .then(() => console.log('✅ 广告加载请求已发送'))
         .catch((err: any) => {
           console.error('❌ 加载广告请求失败:', err);
@@ -1424,81 +1391,13 @@ export function useAdManager(config: AdConfig) {
   };
 
   const showH5Ad = (resolve: (value: { ecpm: number; slotId: string }) => void, reject: (reason?: any) => void) => {
-    isAdLoading.value = true;
-
-    try {
-      const selectedSlotId = getNextSlotId();
-      console.log('选择的H5广告位:', selectedSlotId);
-      
-      const rewardVideoAd = window.baidu.mobads.RewardVideoAd({
-        slotId: selectedSlotId,
-        appId: config.appId,
-        onAdLoaded: async () => {
-          console.log('H5 广告加载成功');
-          isAdReady.value = true;
-          isAdLoading.value = false;
-          
-          // 检查广告是否就绪（未过期且缓存成功）
-          console.log('🔍 检查 H5 广告就绪状态...');
-          const isAdReadyToShow = rewardVideoAd.isReady ? rewardVideoAd.isReady() : true;
-          console.log('📊 H5 广告就绪状态:', isAdReadyToShow);
-          
-          if (!isAdReadyToShow) {
-            console.warn('⚠️ H5 广告未就绪（可能已过期或未缓存完成）');
-            isAdReady.value = false;
-            isProcessing = false;
-            showNoAdAvailable(reject);
-            return;
-          }
-          
-          console.log('✅ H5 广告已就绪，准备播放');
-          rewardVideoAd.show();
-        },
-        onAdFailed: (error: any) => {
-          console.error('H5 广告加载失败:', error);
-          isAdReady.value = false;
-          isAdLoading.value = false;
-          isProcessing = false;
-          showNoAdAvailable(reject);
-        },
-        onAdShow: () => console.log('H5 广告开始播放'),
-        onAdClose: () => {
-          console.log('H5 广告关闭');
-          isProcessing = false;
-        },
-        onAdReward: (reward: any) => {
-          console.log('获得 H5 广告奖励:', reward);
-          let ecpm = reward?.ecpm || reward?.amount || 0;
-          
-          if (selectedSlotId === '19188427') {
-            console.log('H5 竞价位广告，使用模拟 ECPM');
-            const simulatedEcpm = generateSimulatedEcpm(selectedSlotId);
-            ecpm = calculateActualEcpm(simulatedEcpm);
-          } else if (ecpm === 0) {
-            console.log('H5 保价位广告 ECPM 为 0，生成模拟 ECPM');
-            const simulatedEcpm = generateSimulatedEcpm(selectedSlotId);
-            ecpm = calculateActualEcpm(simulatedEcpm);
-          }
-          
-          isAdReady.value = false;
-          isProcessing = false;
-          if (ecpm > 0) {
-            resolve({ ecpm, slotId: selectedSlotId });
-          } else {
-            showNoAdAvailable(reject);
-          }
-        },
-        onAdClick: () => console.log('用户点击了 H5 广告')
-      });
-
-      rewardVideoAd.load();
-    } catch (error) {
-      console.error('H5 广告初始化失败:', error);
-      isAdReady.value = false;
-      isAdLoading.value = false;
-      isProcessing = false;
-      showNoAdAvailable(reject);
-    }
+    // 快手广告 SDK 仅提供原生 Android 接入方案，无 H5 版 mobads.js。
+    // Web/非原生环境直接降级失败，走无广告分支。
+    console.warn('[showH5Ad] 快手广告 H5 环境不可用，仅支持原生 Android APK 环境');
+    isAdLoading.value = false;
+    isAdReady.value = false;
+    isProcessing = false;
+    showNoAdAvailable(reject);
   };
 
   const showNoAdAvailable = (reject: (reason?: any) => void) => {

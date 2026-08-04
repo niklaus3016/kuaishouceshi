@@ -1,4 +1,4 @@
-package com.yuexuxingzuo.app;
+package com.mijingxingzuo.app;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;

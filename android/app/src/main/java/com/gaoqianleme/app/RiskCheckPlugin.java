@@ -1,4 +1,4 @@
-package com.yuexuxingzuo.app;
+package com.mijingxingzuo.app;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
