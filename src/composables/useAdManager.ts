@@ -101,7 +101,6 @@ const calculateActualEcpm = (simulatedEcpm: number): number => {
 
 const generateSimulatedEcpm = (slotId: string): number => {
   const ecpmRanges: { [key: string]: [number, number] } = {
-    '35383000001': [1620, 1800],
     '35383000003': [1350, 1500],
     '35383000005': [900, 1000],
     '35383000007': [720, 800],
@@ -110,9 +109,7 @@ const generateSimulatedEcpm = (slotId: string): number => {
     '35383000013': [270, 300],
     '35383000015': [180, 200],
     '35383000019': [90, 100],
-    '35383000021': [45, 50],
-    '35383000023': [20, 30],
-    '35383000025': [20, 30]
+    '35383000023': [20, 30]
   };
   const range = ecpmRanges[slotId];
   if (!range) return 0;
@@ -252,29 +249,24 @@ export function useAdManager(config: AdConfig) {
   let preloadingPromise: Promise<void> | null = null; // 预加载Promise，用于等待预加载完成
   
   // 广告位分组配置（快手联盟 - 激励视频 posId）
-  // 已替换为快手联盟后台申请的 12 个真实激励视频 posId，按高→低保价档位分到 4 个 group。
+  // 已替换为快手联盟后台申请的 9 个真实激励视频 posId，按高→低保价档位分到 3 个 group。
   const AD_GROUPS = {
     group1: [
-      '35383000001', // group1 第1位：保价 1800（ECPM 1620-1800）
-      '35383000003', // group1 第2位：保价 1500（ECPM 1350-1500）
-      '35383000005'  // group1 第3位：保价 1000（ECPM 900-1000）
+      '35383000003', // group1 第1位：保价 1500（ECPM 1350-1500）
+      '35383000005', // group1 第2位：保价 1000（ECPM 900-1000）
+      '35383000007'  // group1 第3位：保价 800（ECPM 720-800）
     ],
     group2: [
-      '35383000007', // group2 第1位：保价 800（ECPM 720-800）
-      '35383000009', // group2 第2位：保价 600（ECPM 540-600）
-      '35383000011'  // group2 第3位：保价 400（ECPM 360-400）
+      '35383000009', // group2 第1位：保价 600（ECPM 540-600）
+      '35383000011', // group2 第2位：保价 400（ECPM 360-400）
+      '35383000013'  // group2 第3位：保价 300（ECPM 270-300）
     ],
     group3: [
-      '35383000013', // group3 第1位：保价 300（ECPM 270-300）
-      '35383000015', // group3 第2位：保价 200（ECPM 180-200）
-      '35383000019'  // group3 第3位：保价 100（ECPM 90-100）
-    ],
-    group4: [
-      '35383000021', // group4 第1位：保价 50（ECPM 45-50）
-      '35383000023', // group4 第2位：竞价（ECPM 20-30）
-      '35383000025'  // group4 第3位：保价 0 / 填充位（ECPM 20-30）
+      '35383000015', // group3 第1位：保价 200（ECPM 180-200）
+      '35383000019', // group3 第2位：保价 100（ECPM 90-100）
+      '35383000023'  // group3 第3位：竞价（ECPM 20-30）
     ]
-  }; // 共12个广告位
+  }; // 共9个广告位
   
   // 并行请求超时时间（毫秒）
   const PARALLEL_TIMEOUT = 2000;
@@ -670,9 +662,9 @@ export function useAdManager(config: AdConfig) {
           break;
         }
         
-        // 广告位之间延迟500ms
+        // 广告位之间延迟200ms
         if (i < allSlots.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
       
