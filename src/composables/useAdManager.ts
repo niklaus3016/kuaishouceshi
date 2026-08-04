@@ -14,6 +14,213 @@ const isAdReady = ref(false);
 const lastError = ref('');
 const preloadAd = ref(false);
 
+// ================================================================
+// 模块级：全局监听器 + 上下文路由
+// 避免每次预加载/展示都 add/remove 监听器，桥接调用从 96 次→0 次
+// ================================================================
+
+/** 全局监听器是否已注册（模块级单例，只注册一次） */
+let globalListenersRegistered = false;
+
+/** 当前预加载上下文（串行，同一时刻只有一个） */
+let currentPreloadContext: {
+  slotId: string;
+  resolve: (success: boolean) => void;
+  isResolved: boolean;
+} | null = null;
+
+/** 当前展示上下文（同一时刻只有一个） */
+let currentShowContext: {
+  slotId: string;
+  resolve: (result: { ecpm: number; slotId: string } | null) => void;
+  reject: (reason?: any) => void;
+  isResolved: boolean;
+  currentAdSuccess: boolean;
+  onAdShowCallback?: () => void; // 展示开始时触发（用于 smartPreload）
+} | null = null;
+
+/** ECPM 计算函数引用（由 useAdManager 内部设置，因为依赖 deviceId） */
+let generateSimulatedEcpmFn: ((slotId: string) => number) | null = null;
+let calculateActualEcpmFn: ((ecpm: number) => number) | null = null;
+
+// ---------- 模块级：ECPM 相关函数（不依赖实例状态，直接提升） ----------
+
+const getDeviceId = (): string => {
+  let deviceId = localStorage.getItem('deviceId');
+  if (!deviceId) {
+    deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('deviceId', deviceId);
+  }
+  return deviceId;
+};
+
+const getEcpmPool = (deviceId: string): number => {
+  const key = `ecpm_pool_${deviceId}`;
+  const stored = localStorage.getItem(key);
+  return stored ? parseFloat(stored) : 0;
+};
+
+const saveEcpmPool = (deviceId: string, pool: number): void => {
+  const key = `ecpm_pool_${deviceId}`;
+  localStorage.setItem(key, pool.toString());
+};
+
+const calculateActualEcpm = (simulatedEcpm: number): number => {
+  try {
+    if (simulatedEcpm < 0) {
+      console.warn('⚠️ 模拟eCPM值为负数，设置为0');
+      simulatedEcpm = 0;
+    }
+    const deviceId = getDeviceId();
+    const previousPool = getEcpmPool(deviceId);
+    const ECPM_THRESHOLD = 700;
+    const HIGH_VALUE_RATIO = 0.7;
+    const RELEASE_RATIO = 0.3;
+    const ROLL_OVER_RATIO = 0.7;
+    let baseTransmitAmount: number;
+    let currentRetainAmount: number;
+    if (simulatedEcpm > ECPM_THRESHOLD) {
+      baseTransmitAmount = simulatedEcpm * HIGH_VALUE_RATIO;
+      currentRetainAmount = simulatedEcpm * (1 - HIGH_VALUE_RATIO);
+    } else {
+      baseTransmitAmount = simulatedEcpm;
+      currentRetainAmount = 0;
+    }
+    const currentReleaseAmount = previousPool * RELEASE_RATIO;
+    const actualEcpm = baseTransmitAmount + currentReleaseAmount;
+    let newPool = previousPool * ROLL_OVER_RATIO + currentRetainAmount;
+    newPool = Math.max(0, newPool);
+    saveEcpmPool(deviceId, newPool);
+    console.log(`💰 eCPM算法: 模拟=${simulatedEcpm} 实际=${actualEcpm.toFixed(2)} 池=${newPool.toFixed(2)}`);
+    return actualEcpm;
+  } catch (error) {
+    console.error('❌ eCPM算法计算失败:', error);
+    return simulatedEcpm;
+  }
+};
+
+const generateSimulatedEcpm = (slotId: string): number => {
+  const ecpmRanges: { [key: string]: [number, number] } = {
+    '35383000001': [1620, 1800],
+    '35383000003': [1350, 1500],
+    '35383000005': [900, 1000],
+    '35383000007': [720, 800],
+    '35383000009': [540, 600],
+    '35383000011': [360, 400],
+    '35383000013': [270, 300],
+    '35383000015': [180, 200],
+    '35383000019': [90, 100],
+    '35383000021': [45, 50],
+    '35383000023': [20, 30],
+    '35383000025': [20, 30]
+  };
+  const range = ecpmRanges[slotId];
+  if (!range) return 0;
+  return Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
+};
+
+// 模块级设置 ECPM 函数引用
+generateSimulatedEcpmFn = generateSimulatedEcpm;
+calculateActualEcpmFn = calculateActualEcpm;
+
+// ---------- 模块级：全局监听器注册（只执行一次） ----------
+
+const ensureGlobalListeners = () => {
+  if (globalListenersRegistered) return;
+  globalListenersRegistered = true;
+  console.log('🔧 注册全局广告监听器（一次性）');
+
+  // === 预加载期事件（路由到 currentPreloadContext） ===
+
+  KuaiShouAd.addListener('onVideoDownloadSuccess', (data: any) => {
+    const ctx = currentPreloadContext;
+    const eventPosId = String(data?.posId || '');
+    if (ctx && !ctx.isResolved && eventPosId === ctx.slotId) {
+      ctx.isResolved = true;
+      console.log(`✅ 串行预加载成功: ${ctx.slotId}`);
+      currentPreloadContext = null;
+      ctx.resolve(true);
+    }
+  });
+
+  KuaiShouAd.addListener('onVideoDownloadFailed', (data: any) => {
+    const ctx = currentPreloadContext;
+    const eventPosId = String(data?.posId || '');
+    if (ctx && !ctx.isResolved && eventPosId === ctx.slotId) {
+      ctx.isResolved = true;
+      console.log(`❌ 串行预加载失败: ${ctx.slotId} (视频下载失败)`, data);
+      currentPreloadContext = null;
+      ctx.resolve(false);
+    }
+  });
+
+  KuaiShouAd.addListener('onAdFailed', (data: any) => {
+    const ctx = currentPreloadContext;
+    const eventPosId = String(data?.posId || '');
+    if (ctx && !ctx.isResolved && eventPosId === ctx.slotId) {
+      ctx.isResolved = true;
+      console.log(`❌ 串行预加载失败: ${ctx.slotId} (广告加载失败)`, data);
+      currentPreloadContext = null;
+      ctx.resolve(false);
+    }
+  });
+
+  // === 展示期事件（路由到 currentShowContext） ===
+
+  KuaiShouAd.addListener('onRewardVerify', (data: any) => {
+    const ctx = currentShowContext;
+    const eventPosId = String(data?.posId || '');
+    if (!ctx || ctx.isResolved || ctx.currentAdSuccess) return;
+    if (eventPosId && eventPosId !== ctx.slotId) return;
+
+    console.log(`========== 预加载广告奖励回调 (${ctx.slotId}) ==========`);
+    ctx.currentAdSuccess = true;
+
+    const simulatedEcpm = generateSimulatedEcpmFn ? generateSimulatedEcpmFn(ctx.slotId) : 0;
+    const ecpm = calculateActualEcpmFn ? calculateActualEcpmFn(simulatedEcpm) : simulatedEcpm;
+    console.log(`✅ 预加载广告成功 (${ctx.slotId})，返回 ECPM:`, ecpm);
+
+    ctx.isResolved = true;
+    currentShowContext = null;
+    ctx.resolve({ ecpm, slotId: ctx.slotId });
+  });
+
+  KuaiShouAd.addListener('onAdShow', (data: any) => {
+    const ctx = currentShowContext;
+    const eventPosId = String(data?.posId || '');
+    if (!ctx || ctx.isResolved) return;
+    if (eventPosId && eventPosId !== ctx.slotId) return;
+    console.log(`📺 预加载广告页面已打开 (${ctx.slotId})，智能触发预加载`);
+    if (ctx.onAdShowCallback) ctx.onAdShowCallback();
+  });
+
+  KuaiShouAd.addListener('onAdClose', (data: any) => {
+    const ctx = currentShowContext;
+    const eventPosId = String(data?.posId || '');
+    if (!ctx || ctx.isResolved) return;
+    if (eventPosId && eventPosId !== ctx.slotId) return;
+    console.log(`✅ 预加载广告关闭回调 (${ctx.slotId})`);
+    if (!ctx.currentAdSuccess) {
+      console.log(`预加载广告关闭但未获得奖励 (${ctx.slotId})，标记为失败`);
+      ctx.isResolved = true;
+      currentShowContext = null;
+      ctx.resolve(null);
+    }
+  });
+
+  // onAdExpired：展示中的广告未展示就被关闭，可能影响 show context
+  KuaiShouAd.addListener('onAdExpired', (data: any) => {
+    const ctx = currentShowContext;
+    const eventPosId = String(data?.posId || '');
+    if (!ctx || ctx.isResolved) return;
+    if (eventPosId && eventPosId !== ctx.slotId) return;
+    console.warn(`⚠️ 预加载广告已失效 (${ctx.slotId})，show 将失败`);
+    ctx.isResolved = true;
+    currentShowContext = null;
+    ctx.reject(new Error('预加载广告已失效'));
+  });
+};
+
 export function useAdManager(config: AdConfig) {
   let rewardVerifyListener: any = null;
   let adFailedListener: any = null;
@@ -77,120 +284,8 @@ export function useAdManager(config: AdConfig) {
     return new Promise(resolve => setTimeout(resolve, ms));
   };
   
-  // 获取或生成设备ID
-  const getDeviceId = (): string => {
-    let deviceId = localStorage.getItem('deviceId');
-    if (!deviceId) {
-      deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      localStorage.setItem('deviceId', deviceId);
-    }
-    return deviceId;
-  };
-  
-  // 从本地存储获取设备的激励池状态
-  const getEcpmPool = (deviceId: string): number => {
-    const key = `ecpm_pool_${deviceId}`;
-    const stored = localStorage.getItem(key);
-    return stored ? parseFloat(stored) : 0;
-  };
-  
-  // 保存设备的激励池状态到本地存储
-  const saveEcpmPool = (deviceId: string, pool: number): void => {
-    const key = `ecpm_pool_${deviceId}`;
-    localStorage.setItem(key, pool.toString());
-  };
-  
-  // 计算实际传输的eCPM值（核心算法）
-  const calculateActualEcpm = (simulatedEcpm: number): number => {
-    try {
-      // 参数校验
-      if (simulatedEcpm < 0) {
-        console.warn('⚠️ 模拟eCPM值为负数，设置为0');
-        simulatedEcpm = 0;
-      }
-      
-      const deviceId = getDeviceId();
-      const previousPool = getEcpmPool(deviceId);
-      
-      // 配置参数
-      const ECPM_THRESHOLD = 700;  // 分界线
-      const HIGH_VALUE_RATIO = 0.7;   // 高值传输比例（70%传输，30%留存）
-      const RELEASE_RATIO = 0.3;     // 激励池释放比例（30%）
-      const ROLL_OVER_RATIO = 0.7;   // 激励池滚存比例（70%）
-      
-      // 计算基础传输值和留存额度
-      let baseTransmitAmount: number;
-      let currentRetainAmount: number;
-      
-      if (simulatedEcpm > ECPM_THRESHOLD) {
-        // 高值eCPM (>700)：70%传输，30%留存
-        baseTransmitAmount = simulatedEcpm * HIGH_VALUE_RATIO;
-        currentRetainAmount = simulatedEcpm * (1 - HIGH_VALUE_RATIO);
-      } else {
-        // 低值eCPM (≤700)：100%传输，0留存
-        baseTransmitAmount = simulatedEcpm;
-        currentRetainAmount = 0;
-      }
-      
-      // 计算当期激励释放额
-      const currentReleaseAmount = previousPool * RELEASE_RATIO;
-      
-      // 计算实际传输值
-      const actualEcpm = baseTransmitAmount + currentReleaseAmount;
-      
-      // 更新激励池总额
-      let newPool = previousPool * ROLL_OVER_RATIO + currentRetainAmount;
-      
-      // 激励池下限控制
-      const MIN_POOL = 0;      // 最小激励池
-      newPool = Math.max(MIN_POOL, newPool);
-      
-      // 保存到本地存储
-      saveEcpmPool(deviceId, newPool);
-      
-      // 日志输出
-      console.log(`💰 eCPM算法计算:`);
-      console.log(`   模拟eCPM: ${simulatedEcpm}`);
-      console.log(`   类型: ${simulatedEcpm > ECPM_THRESHOLD ? '高值' : '低值'}`);
-      console.log(`   基础传输值: ${baseTransmitAmount.toFixed(2)}`);
-      console.log(`   当期留存额度: ${currentRetainAmount.toFixed(2)}`);
-      console.log(`   上一期激励池: ${previousPool.toFixed(2)}`);
-      console.log(`   当期激励释放额: ${currentReleaseAmount.toFixed(2)}`);
-      console.log(`   实际传输值: ${actualEcpm.toFixed(2)}`);
-      console.log(`   新激励池总额: ${newPool.toFixed(2)}`);
-      
-      return actualEcpm;
-    } catch (error) {
-      console.error('❌ eCPM算法计算失败:', error);
-      // 异常情况下返回原始模拟值
-      return simulatedEcpm;
-    }
-  };
-
-  const generateSimulatedEcpm = (slotId: string): number => {
-    const ecpmRanges: { [key: string]: [number, number] } = {
-      // group1 - 高保价
-      '35383000001': [1620, 1800],  // 保价 1800
-      '35383000003': [1350, 1500],  // 保价 1500
-      '35383000005': [900, 1000],   // 保价 1000
-      // group2 - 中保价
-      '35383000007': [720, 800],    // 保价 800
-      '35383000009': [540, 600],    // 保价 600
-      '35383000011': [360, 400],    // 保价 400
-      // group3 - 低保价
-      '35383000013': [270, 300],    // 保价 300
-      '35383000015': [180, 200],    // 保价 200
-      '35383000019': [90, 100],     // 保价 100
-      // group4 - 次低 / 竞价 / 底价
-      '35383000021': [45, 50],      // 保价 50
-      '35383000023': [20, 30],      // 竞价
-      '35383000025': [20, 30]       // 保价 0（填充位）
-    };
-
-    const range = ecpmRanges[slotId];
-    if (!range) return 0;
-    return Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
-  };
+  // 注：getDeviceId / getEcpmPool / saveEcpmPool / calculateActualEcpm / generateSimulatedEcpm
+  // 已提升到模块级，供全局监听器使用（避免每次预加载/展示都 add/remove 监听器）
 
   const isBiddingSlot = (slotId: string): boolean => {
     const biddingSlots = ['35383000023']; // group4 第2位为竞价位
@@ -485,82 +580,34 @@ export function useAdManager(config: AdConfig) {
   };
 
   // 预加载单个广告位（串行用）
+  // 使用全局监听器 + posId 路由，不再每次 add/remove 监听器
   const preloadSingleSlot = (slotId: string): Promise<boolean> => {
     return new Promise((resolve) => {
-      let isResolved = false;
-
-      const onVideoDownloadSuccess = () => {
-        if (!isResolved) {
-          isResolved = true;
-          console.log(`✅ 串行预加载成功: ${slotId}`);
-          cleanupListeners();
-          resolve(true);
-        }
+      // 设置全局预加载上下文，全局监听器会根据 posId 路由
+      currentPreloadContext = {
+        slotId,
+        resolve,
+        isResolved: false,
       };
-
-      const onVideoDownloadFailed = () => {
-        if (!isResolved) {
-          isResolved = true;
-          console.log(`❌ 串行预加载失败: ${slotId} (视频下载失败)`);
-          cleanupListeners();
-          resolve(false);
-        }
-      };
-
-      const onAdFailed = (error: any) => {
-        if (!isResolved) {
-          isResolved = true;
-          console.log(`❌ 串行预加载失败: ${slotId} (广告加载失败)`, error);
-          cleanupListeners();
-          resolve(false);
-        }
-      };
-
-      // 监听预加载失效事件（广告在 show 前被 SDK 回收/过期）
-      const onAdExpired = () => {
-        console.warn(`⚠️ 预加载广告失效: ${slotId} (未展示就被关闭)`);
-        // 不直接 resolve，让超时或其他回调处理
-        // 但标记预加载结果为失效，便于后续判断
-        if (!isResolved) {
-          isResolved = true;
-          cleanupListeners();
-          resolve(false);
-        }
-      };
-
-      const cleanupListeners = () => {
-        try {
-          KuaiShouAd.removeListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
-          KuaiShouAd.removeListener('onVideoDownloadFailed', onVideoDownloadFailed);
-          KuaiShouAd.removeListener('onAdFailed', onAdFailed);
-          KuaiShouAd.removeListener('onAdExpired', onAdExpired);
-        } catch (e) {
-          // 忽略清理错误
-        }
-      };
-
-      // 注册监听器
-      KuaiShouAd.addListener('onVideoDownloadSuccess', onVideoDownloadSuccess);
-      KuaiShouAd.addListener('onVideoDownloadFailed', onVideoDownloadFailed);
-      KuaiShouAd.addListener('onAdFailed', onAdFailed);
-      KuaiShouAd.addListener('onAdExpired', onAdExpired);
 
       // 设置超时（2秒）
       setTimeout(() => {
-        if (!isResolved) {
-          isResolved = true;
+        const ctx = currentPreloadContext;
+        if (ctx && ctx.slotId === slotId && !ctx.isResolved) {
+          ctx.isResolved = true;
           console.log(`⏱️ 串行预加载超时: ${slotId}`);
-          cleanupListeners();
+          currentPreloadContext = null;
           resolve(false);
         }
       }, 2000);
 
       // 调用loadRewardVideoAd()加载广告
       KuaiShouAd.loadRewardVideoAd({ adId: slotId }).catch((error) => {
-        if (!isResolved) {
-          isResolved = true;
+        const ctx = currentPreloadContext;
+        if (ctx && ctx.slotId === slotId && !ctx.isResolved) {
+          ctx.isResolved = true;
           console.log(`❌ 串行预加载请求失败: ${slotId}`, error);
-          cleanupListeners();
+          currentPreloadContext = null;
           resolve(false);
         }
       });
@@ -871,6 +918,9 @@ export function useAdManager(config: AdConfig) {
         isLoaded.value = true;
         preloadAd.value = true;
 
+        // 注册全局监听器（一次性，模块级单例）
+        ensureGlobalListeners();
+
         // 通知原生：用户已同意隐私协议（会补触发 SDK init）
         try {
           await KuaiShouAd.onUserAgreePrivacy?.();
@@ -901,6 +951,7 @@ export function useAdManager(config: AdConfig) {
   };
   
   // 显示预加载的广告
+  // 使用全局监听器 + posId 路由，不再每次 add/remove 监听器
   const showPreloadedAd = async (resolve: (value: { ecpm: number; slotId: string }) => void, reject: (reason?: any) => void) => {
     if (!preloadedAd || !preloadedAd.isReady) {
       console.log('预加载广告未就绪，开始正常加载');
@@ -911,84 +962,27 @@ export function useAdManager(config: AdConfig) {
     const slotId = preloadedAd.slotId;
     console.log(`🚀 使用预加载的广告位: ${slotId}`);
 
-    // 注意：不提前清空 preloadedAd，等 show 成功后再清空，失败时还能用于判断
+    // 清空预加载引用
     preloadedAd = null;
 
     // 设置广告显示标志
     hasShownAd = true;
 
-    // 注册监听器
-    let isResolved = false;
-    let currentAdSuccess = false;
-
-    const resolveOnce = (result: { ecpm: number; slotId: string } | null) => {
-      if (!isResolved) {
-        isResolved = true;
-        cleanupSlotListeners();
+    // 设置全局展示上下文，全局监听器会根据 posId 路由
+    currentShowContext = {
+      slotId,
+      resolve: (result) => {
         if (result) {
           resolve(result);
         } else {
           reject(new Error('广告显示失败'));
         }
-      }
+      },
+      reject,
+      isResolved: false,
+      currentAdSuccess: false,
+      onAdShowCallback: () => smartPreload(),
     };
-
-    const onRewardVerify = (result: any) => {
-      if (currentAdSuccess || isResolved) return;
-
-      console.log(`========== 预加载广告奖励回调 (${slotId}) ==========`);
-      console.log('结果:', result);
-
-      currentAdSuccess = true;
-
-      // 所有广告位都使用模拟 ECPM 值
-      console.log('使用模拟 ECPM 值');
-      const simulatedEcpm = generateSimulatedEcpm(slotId);
-      const ecpm = calculateActualEcpm(simulatedEcpm);
-
-      console.log(`✅ 预加载广告成功 (${slotId})，返回 ECPM:`, ecpm);
-
-      resolveOnce({ ecpm, slotId });
-    };
-
-    const onAdShow = () => {
-      console.log(`📺 预加载广告页面已打开 (${slotId})，智能触发预加载`);
-      smartPreload();
-    };
-
-    const onAdClose = () => {
-      console.log(`✅ 预加载广告关闭回调 (${slotId})`);
-      cleanupSlotListeners();
-      if (!currentAdSuccess) {
-        console.log(`预加载广告关闭但未获得奖励 (${slotId})，标记为失败`);
-        resolveOnce(null);
-      }
-    };
-
-    // 监听预加载失效事件（广告在 show 前被 SDK 回收）
-    const onAdExpired = () => {
-      if (isResolved) return;
-      console.warn(`⚠️ 预加载广告已失效 (${slotId})，show 将失败`);
-      cleanupSlotListeners();
-      reject(new Error('预加载广告已失效'));
-    };
-
-    const cleanupSlotListeners = () => {
-      try {
-        KuaiShouAd.removeListener('onRewardVerify', onRewardVerify);
-        KuaiShouAd.removeListener('onAdClose', onAdClose);
-        KuaiShouAd.removeListener('onAdShow', onAdShow);
-        KuaiShouAd.removeListener('onAdExpired', onAdExpired);
-      } catch (e) {
-        console.warn(`清理预加载广告监听器失败 (${slotId}):`, e);
-      }
-    };
-
-    // 注册监听器
-    KuaiShouAd.addListener('onRewardVerify', onRewardVerify);
-    KuaiShouAd.addListener('onAdClose', onAdClose);
-    KuaiShouAd.addListener('onAdShow', onAdShow);
-    KuaiShouAd.addListener('onAdExpired', onAdExpired);
 
     try {
       // 显示广告
@@ -996,8 +990,12 @@ export function useAdManager(config: AdConfig) {
       console.log(`✅ 预加载广告显示命令已发送 (${slotId})`);
     } catch (error) {
       console.error(`❌ 显示预加载广告失败 (${slotId}):`, error);
-      cleanupSlotListeners();
-      resolveOnce(null);
+      const ctx = currentShowContext;
+      if (ctx && ctx.slotId === slotId && !ctx.isResolved) {
+        ctx.isResolved = true;
+        currentShowContext = null;
+        reject(new Error('广告显示失败'));
+      }
     }
   };
 

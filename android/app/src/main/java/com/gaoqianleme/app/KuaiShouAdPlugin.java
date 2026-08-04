@@ -223,6 +223,7 @@ public class KuaiShouAdPlugin extends Plugin {
                     JSObject err = new JSObject();
                     err.put("code", code);
                     err.put("error", msg == null ? "未知错误" : msg);
+                    err.put("posId", posId);
                     notifyListeners("onAdFailed", err);
                     // 视频下载失败事件（语义映射，与百度端事件对齐）
                     notifyListeners("onVideoDownloadFailed", err);
@@ -234,7 +235,9 @@ public class KuaiShouAdPlugin extends Plugin {
                     Log.d(TAG, "激励视频广告数据请求成功 (onRewardVideoResult), adList.size="
                             + (adList != null ? adList.size() : "null")
                             + " cost=" + (System.currentTimeMillis() - startTime) + "ms");
-                    notifyListeners("onAdLoaded", new JSObject());
+                    JSObject loaded = new JSObject();
+                    loaded.put("posId", posId);
+                    notifyListeners("onAdLoaded", loaded);
 
                     cacheFirstAdIfAvailable(adList);
                 }
@@ -248,7 +251,9 @@ public class KuaiShouAdPlugin extends Plugin {
 
                     cacheFirstAdIfAvailable(adList);
 
-                    notifyListeners("onVideoDownloadSuccess", new JSObject());
+                    JSObject success = new JSObject();
+                    success.put("posId", posId);
+                    notifyListeners("onVideoDownloadSuccess", success);
                 }
             });
 
@@ -279,13 +284,17 @@ public class KuaiShouAdPlugin extends Plugin {
             @Override
             public void onAdClicked(KsInnerAd ksInnerAd) {
                 Log.d(TAG, "激励视频内部广告点击, type=" + (ksInnerAd != null ? ksInnerAd.getType() : "?"));
-                notifyListeners("onAdClicked", new JSObject());
+                JSObject data = new JSObject();
+                data.put("posId", mShowingPosId);
+                notifyListeners("onAdClicked", data);
             }
 
             @Override
             public void onAdShow(KsInnerAd ksInnerAd) {
                 Log.d(TAG, "激励视频内部广告曝光, type=" + (ksInnerAd != null ? ksInnerAd.getType() : "?"));
-                notifyListeners("onAdShow", new JSObject());
+                JSObject data = new JSObject();
+                data.put("posId", mShowingPosId);
+                notifyListeners("onAdShow", data);
             }
         });
 
@@ -294,7 +303,9 @@ public class KuaiShouAdPlugin extends Plugin {
             @Override
             public void onAdClicked() {
                 Log.d(TAG, "激励视频广告点击");
-                notifyListeners("onAdClicked", new JSObject());
+                JSObject data = new JSObject();
+                data.put("posId", mShowingPosId);
+                notifyListeners("onAdClicked", data);
             }
 
             @Override
@@ -303,7 +314,9 @@ public class KuaiShouAdPlugin extends Plugin {
 
                 if (isAdShown) {
                     // 正常关闭流程：广告已展示，用户看完或跳过
-                    notifyListeners("onAdClose", new JSObject());
+                    JSObject closeData = new JSObject();
+                    closeData.put("posId", mShowingPosId);
+                    notifyListeners("onAdClose", closeData);
 
                     // 如果 onRewardVerify 没有触发（例如用户跳过），则广告关闭时 resolve pendingShowCall
                     if (pendingShowCall != null) {
@@ -311,6 +324,7 @@ public class KuaiShouAdPlugin extends Plugin {
                         JSObject result = new JSObject();
                         result.put("rewardVerify", false);
                         result.put("ecpm", 0);
+                        result.put("posId", mShowingPosId);
                         pendingShowCall.resolve(result);
                         pendingShowCall = null;
                     }
@@ -318,7 +332,7 @@ public class KuaiShouAdPlugin extends Plugin {
                     // 未展示就被 SDK 回收/过期：通知前端预加载失效
                     Log.w(TAG, "广告未展示就被关闭（预加载失效），通知前端 onAdExpired");
                     JSObject expired = new JSObject();
-                    expired.put("posId", mCurrentPosId);
+                    expired.put("posId", mShowingPosId);
                     expired.put("reason", "expired_before_show");
                     notifyListeners("onAdExpired", expired);
                 }
@@ -335,13 +349,16 @@ public class KuaiShouAdPlugin extends Plugin {
                 JSObject err = new JSObject();
                 err.put("code", code);
                 err.put("extra", extra);
+                err.put("posId", mShowingPosId);
                 notifyListeners("onVideoPlayError", err);
             }
 
             @Override
             public void onVideoPlayEnd() {
                 Log.d(TAG, "激励视频广告播放完成");
-                notifyListeners("onVideoPlayEnd", new JSObject());
+                JSObject data = new JSObject();
+                data.put("posId", mShowingPosId);
+                notifyListeners("onVideoPlayEnd", data);
             }
 
             @Override
@@ -349,14 +366,19 @@ public class KuaiShouAdPlugin extends Plugin {
                 Log.d(TAG, "激励视频广告跳过播放完成, playDuration=" + playDuration);
                 JSObject data = new JSObject();
                 data.put("playDuration", playDuration);
+                data.put("posId", mShowingPosId);
                 notifyListeners("onVideoSkipToEnd", data);
             }
 
             @Override
             public void onVideoPlayStart() {
                 Log.d(TAG, "激励视频广告播放开始 (onVideoPlayStart)");
-                notifyListeners("onAdShow", new JSObject());
-                notifyListeners("onVideoPlayStart", new JSObject());
+                JSObject showData = new JSObject();
+                showData.put("posId", mShowingPosId);
+                notifyListeners("onAdShow", showData);
+                JSObject startData = new JSObject();
+                startData.put("posId", mShowingPosId);
+                notifyListeners("onVideoPlayStart", startData);
             }
 
             /**
@@ -386,6 +408,7 @@ public class KuaiShouAdPlugin extends Plugin {
                 JSObject data = new JSObject();
                 data.put("taskType", taskType);
                 data.put("currentTaskStatus", currentTaskStatus);
+                data.put("posId", mShowingPosId);
                 notifyListeners("onRewardStepVerify", data);
             }
 
@@ -394,6 +417,7 @@ public class KuaiShouAdPlugin extends Plugin {
                 Log.d(TAG, "激励视频广告额外奖励 extraRewardType=" + extraRewardType);
                 JSObject data = new JSObject();
                 data.put("extraRewardType", extraRewardType);
+                data.put("posId", mShowingPosId);
                 notifyListeners("onExtraRewardVerify", data);
             }
         });
