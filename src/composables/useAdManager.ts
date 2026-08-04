@@ -190,8 +190,11 @@ const ensureGlobalListeners = () => {
     const eventPosId = String(data?.posId || '');
     if (!ctx || ctx.isResolved) return;
     if (eventPosId && eventPosId !== ctx.slotId) return;
-    console.log(`📺 预加载广告页面已打开 (${ctx.slotId})，智能触发预加载`);
-    if (ctx.onAdShowCallback) ctx.onAdShowCallback();
+    console.log(`📺 预加载广告页面已打开 (${ctx.slotId})，500ms后智能触发预加载`);
+    // 延迟500ms再预加载，避免与当前广告播放产生资源竞争
+    if (ctx.onAdShowCallback) {
+      setTimeout(() => ctx.onAdShowCallback?.(), 500);
+    }
   });
 
   KuaiShouAd.addListener('onAdClose', (data: any) => {
