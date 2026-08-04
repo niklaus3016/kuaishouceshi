@@ -66,7 +66,7 @@ public class KuaiShouAdPlugin extends Plugin {
         mCurrentPosId = posId;
         mRewardHandled = false; // 重置激励回调标志位
 
-        Log.d(TAG, "加载激励视频广告, posId: " + posId);
+        Log.d(TAG, "加载激励视频广告, posId: " + posId + " (raw: " + adId + ")");
 
         Activity activity = getActivity();
         if (activity == null) {
@@ -74,14 +74,21 @@ public class KuaiShouAdPlugin extends Plugin {
             return;
         }
 
-        // 确保 SDK 已初始化（隐私同意后才会真正 init；这里若未同意，getLoadManager 内部会走降级）
+        // 确保 SDK 已初始化
         if (!KSSdkInitUtil.hasInit()) {
-            // 未初始化时尝试默认 init（假设用户已同意隐私；若未同意则 customController 会返回 false）
+            Log.w(TAG, "SDK 未初始化，触发初始化后再加载广告");
             UserDataObtainController.getInstance().setUserAgree(true);
             KSSdkInitUtil.initSDK(activity.getApplicationContext());
         }
 
-        activity.runOnUiThread(() -> doLoadRewardVideoAd(call, activity, posId));
+        // 延迟等待 SDK 初始化完成（init 回调可能需要数百毫秒）
+        activity.runOnUiThread(() -> {
+            // 再检查一次 SDK 状态
+            if (!KSSdkInitUtil.hasInit()) {
+                Log.w(TAG, "SDK 仍未就绪（可能初始化失败），尝试继续加载");
+            }
+            doLoadRewardVideoAd(call, activity, posId);
+        });
     }
 
     @PluginMethod
@@ -150,6 +157,9 @@ public class KuaiShouAdPlugin extends Plugin {
                                      @NonNull Activity activity,
                                      final long posId) {
         try {
+            Log.d(TAG, "doLoadRewardVideoAd start, posId=" + posId
+                    + " hasInit=" + KSSdkInitUtil.hasInit());
+
             // 屏幕方向（默认竖屏）
             int screenOrientation = SdkConfig.SCREEN_ORIENTATION_PORTRAIT;
             try {
@@ -175,44 +185,51 @@ public class KuaiShouAdPlugin extends Plugin {
                     .rewardCallbackExtraData(rewardExtraData);
 
             KsScene scene = sceneBuilder.build();
+            Log.d(TAG, "KsScene built, posId=" + posId + " scene=" + scene);
 
             final long startTime = System.currentTimeMillis();
 
-            KSSdkInitUtil.getLoadManager()
-                    .loadRewardVideoAd(scene, new KsLoadManager.RewardVideoAdListener() {
-                        @Override
-                        public void onError(int code, String msg) {
-                            Log.e(TAG, "激励视频广告请求失败 code=" + code + " msg=" + msg);
-                            JSObject err = new JSObject();
-                            err.put("code", code);
-                            err.put("error", msg == null ? "未知错误" : msg);
-                            notifyListeners("onAdFailed", err);
-                            // 视频下载失败事件（语义映射，与百度端事件对齐）
-                            notifyListeners("onVideoDownloadFailed", err);
-                        }
+            KsLoadManager loadManager = KSSdkInitUtil.getLoadManager();
+            Log.d(TAG, "loadManager=" + loadManager);
 
-                        @Override
-                        public void onRewardVideoResult(@Nullable List<KsRewardVideoAd> adList) {
-                            // 视频广告数据请求完成（未缓存资源，可在线播放）
-                            Log.d(TAG, "激励视频广告数据请求成功 (onRewardVideoResult), cost: "
-                                    + (System.currentTimeMillis() - startTime) + "ms");
-                            notifyListeners("onAdLoaded", new JSObject());
+            loadManager.loadRewardVideoAd(scene, new KsLoadManager.RewardVideoAdListener() {
+                @Override
+                public void onError(int code, String msg) {
+                    Log.e(TAG, "激励视频广告请求失败 code=" + code + " msg=" + msg
+                            + " posId=" + posId + " cost=" + (System.currentTimeMillis() - startTime) + "ms");
+                    JSObject err = new JSObject();
+                    err.put("code", code);
+                    err.put("error", msg == null ? "未知错误" : msg);
+                    notifyListeners("onAdFailed", err);
+                    // 视频下载失败事件（语义映射，与百度端事件对齐）
+                    notifyListeners("onVideoDownloadFailed", err);
+                }
 
-                            cacheFirstAdIfAvailable(adList);
-                        }
+                @Override
+                public void onRewardVideoResult(@Nullable List<KsRewardVideoAd> adList) {
+                    // 视频广告数据请求完成（未缓存资源，可在线播放）
+                    Log.d(TAG, "激励视频广告数据请求成功 (onRewardVideoResult), adList.size="
+                            + (adList != null ? adList.size() : "null")
+                            + " cost=" + (System.currentTimeMillis() - startTime) + "ms");
+                    notifyListeners("onAdLoaded", new JSObject());
 
-                        @Override
-                        public void onRewardVideoAdLoad(@Nullable List<KsRewardVideoAd> adList) {
-                            // 视频广告数据+资源缓存全部完成（本地播放流畅，对应 onVideoDownloadSuccess）
-                            Log.d(TAG, "激励视频广告数据+资源缓存成功 (onRewardVideoAdLoad), cost: "
-                                    + (System.currentTimeMillis() - startTime) + "ms");
+                    cacheFirstAdIfAvailable(adList);
+                }
 
-                            cacheFirstAdIfAvailable(adList);
+                @Override
+                public void onRewardVideoAdLoad(@Nullable List<KsRewardVideoAd> adList) {
+                    // 视频广告数据+资源缓存全部完成（本地播放流畅，对应 onVideoDownloadSuccess）
+                    Log.d(TAG, "激励视频广告数据+资源缓存成功 (onRewardVideoAdLoad), adList.size="
+                            + (adList != null ? adList.size() : "null")
+                            + " cost=" + (System.currentTimeMillis() - startTime) + "ms");
 
-                            notifyListeners("onVideoDownloadSuccess", new JSObject());
-                        }
-                    });
+                    cacheFirstAdIfAvailable(adList);
 
+                    notifyListeners("onVideoDownloadSuccess", new JSObject());
+                }
+            });
+
+            Log.d(TAG, "loadRewardVideoAd request sent, posId=" + posId);
             call.resolve();
         } catch (Throwable t) {
             Log.e(TAG, "加载激励视频广告异常: " + t.getMessage(), t);

@@ -26,7 +26,10 @@ public final class KSSdkInitUtil {
     private static final String APP_NAME = "秘境星座";      // 应用真实名称
     private static final String APP_WB_KEY = "cK7PgwbAr";  // 对外可传空或实际申请值
 
+    /** SDK 初始化调用已发起（不等于初始化成功） */
     private static volatile boolean sHasInit;
+    /** SDK 初始化真正成功 */
+    private static volatile boolean sInitSuccess;
     private static volatile boolean sHasStart;
     private static Context sAppContext;
 
@@ -34,10 +37,11 @@ public final class KSSdkInitUtil {
     }
 
     public static synchronized void initSDK(@NonNull Context context) {
-        if (sHasInit) {
+        if (sHasInit && sInitSuccess) {
+            Log.i(TAG, "sdk already initialized, skip");
             return;
         }
-        Log.i(TAG, "init sdk start");
+        Log.i(TAG, "init sdk start, appId=" + APP_ID + " appName=" + APP_NAME);
         sHasInit = true;
         sAppContext = context.getApplicationContext();
         final long startTime = System.currentTimeMillis();
@@ -51,27 +55,29 @@ public final class KSSdkInitUtil {
                 .setInitCallback(new KsInitCallback() {
                     @Override
                     public void onSuccess() {
-                        Log.i(TAG, "init success, cost: " + (System.currentTimeMillis() - startTime) + "ms");
+                        sInitSuccess = true;
+                        Log.i(TAG, "init SUCCESS, appId=" + APP_ID
+                                + " cost=" + (System.currentTimeMillis() - startTime) + "ms");
                     }
 
                     @Override
                     public void onFail(int code, String msg) {
-                        Log.e(TAG, "init fail code:" + code + " msg:" + msg);
-                        // 初始化失败允许降级：下次调用 getLoadManager 时会再次尝试
-                        sHasInit = false;
+                        sInitSuccess = false;
+                        Log.e(TAG, "init FAIL code=" + code + " msg=" + msg
+                                + " appId=" + APP_ID);
                     }
                 })
                 .setStartCallback(new KsInitCallback() {
                     @Override
                     public void onSuccess() {
                         sHasStart = true;
-                        Log.i(TAG, "start success");
+                        Log.i(TAG, "start SUCCESS");
                     }
 
                     @Override
                     public void onFail(int code, String msg) {
                         sHasStart = false;
-                        Log.e(TAG, "start fail code:" + code + " msg:" + msg);
+                        Log.e(TAG, "start FAIL code=" + code + " msg=" + msg);
                     }
                 })
                 .build());
@@ -96,12 +102,13 @@ public final class KSSdkInitUtil {
     }
 
     public static boolean hasInit() {
-        return sHasInit;
+        return sInitSuccess;
     }
 
     private static void checkSDKInit() {
-        if (!sHasInit && sAppContext != null) {
-            // 进程恢复等场景下的补初始化
+        if (!sInitSuccess && sAppContext != null) {
+            // 进程恢复或初始化失败等场景下的补初始化
+            Log.w(TAG, "sdk not init success, retry init");
             initSDK(sAppContext);
         }
     }
