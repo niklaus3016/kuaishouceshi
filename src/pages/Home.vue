@@ -1723,12 +1723,19 @@ const submitWithdraw = async () => {
         </div>
       </div> -->
         
-        <div class="relative">
+        <div class="relative flex items-center justify-center">
+          <!-- 左边"福"字 -->
+          <span 
+            class="absolute left-[-80px] text-[72px] font-black text-amber-400/90 select-none"
+            :class="{ 'text-zinc-600': isWatching, 'text-red-400': deviceStatus.isLimited && !isWatching }"
+            style="text-shadow: 0 0 30px rgba(251,191,36,0.3);"
+          >福</span>
+          
           <!-- 按钮背景光晕 -->
           <div 
             class="absolute inset-0 blur-3xl rounded-full transition-all duration-1000"
             :class="[
-              isWatching ? 'bg-blue-500 opacity-60 scale-110' : 'bg-emerald-500 opacity-30 scale-100',
+              isWatching ? 'bg-blue-500 opacity-60 scale-110' : 'bg-amber-500 opacity-30 scale-100',
               'animate-pulse'
             ]"
           />
@@ -1742,18 +1749,39 @@ const submitWithdraw = async () => {
                 ? 'bg-zinc-900/80 border-zinc-800 text-zinc-600 cursor-not-allowed' 
                 : deviceStatus.isLimited
                 ? 'bg-zinc-900/80 border-red-800/50 text-red-400 cursor-not-allowed' 
-                : 'bg-black border-white/10 text-white shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:border-emerald-500/50'
+                : 'bg-black border-amber-500/30 text-amber-400 shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:border-amber-400/50'
             ]"
           >
             <div :class="{ 'animate-spin': isWatching }" class="mb-5">
-              <PlayCircle class="w-16 h-16" :class="isWatching ? 'text-zinc-700' : deviceStatus.isLimited ? 'text-red-400' : 'text-emerald-400'" />
+              <PlayCircle 
+                class="w-16 h-16" 
+                :class="[
+                  isWatching ? 'text-zinc-700' 
+                  : deviceStatus.isLimited ? 'text-red-400' 
+                  : 'text-amber-400'
+                ]" 
+              />
             </div>
             <div class="text-center">
-              <span class="block text-base font-black uppercase tracking-widest leading-none">
+              <span 
+                class="block text-base font-black uppercase tracking-widest leading-none"
+                :class="[
+                  isWatching ? 'text-zinc-600' 
+                  : deviceStatus.isLimited ? 'text-red-400' 
+                  : 'text-amber-400'
+                ]"
+              >
                 {{ isWatching ? '正在加载' : deviceStatus.isLimited ? '设备价值过低' : '点击赚取金币' }}
               </span>
             </div>
           </button>
+
+          <!-- 右边"利"字 -->
+          <span 
+            class="absolute right-[-80px] text-[72px] font-black text-amber-400/90 select-none"
+            :class="{ 'text-zinc-600': isWatching, 'text-red-400': deviceStatus.isLimited && !isWatching }"
+            style="text-shadow: 0 0 30px rgba(251,191,36,0.3);"
+          >利</span>
         </div>
 
 
