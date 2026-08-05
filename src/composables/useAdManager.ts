@@ -1,6 +1,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import KuaiShouAd from '../plugins/KuaiShouAdPlugin';
 import { sendRedPacket, recordAdView, getPoolStatus, getUserTickets } from '../api/apiService';
+import { getDeviceId } from '../utils/device';
 
 interface AdConfig {
   appId: string;
@@ -44,15 +45,6 @@ let generateSimulatedEcpmFn: ((slotId: string) => number) | null = null;
 let calculateActualEcpmFn: ((ecpm: number) => number) | null = null;
 
 // ---------- 模块级：ECPM 相关函数（不依赖实例状态，直接提升） ----------
-
-const getDeviceId = (): string => {
-  let deviceId = localStorage.getItem('deviceId');
-  if (!deviceId) {
-    deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem('deviceId', deviceId);
-  }
-  return deviceId;
-};
 
 const getEcpmPool = (deviceId: string): number => {
   const key = `ecpm_pool_${deviceId}`;

@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Lock, User } from 'lucide-vue-next';
 import { checkEmployee } from '../api/apiService';
+import { getDeviceId, getPackageName } from '../utils/device';
 
 const empId = ref('');
 const error = ref('');
@@ -24,7 +25,9 @@ const handleLogin = async (e: Event) => {
   
   try {
     // 调用后端登录校验接口
-    const response = await checkEmployee(empId.value);
+    const deviceId = getDeviceId();
+    const packageName = getPackageName();
+    const response = await checkEmployee(empId.value, deviceId, packageName);
     
     if (response.success && response.data) {
       // 登录成功，存储员工信息

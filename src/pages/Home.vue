@@ -7,6 +7,7 @@ import { useAdManager } from '../composables/useAdManager';
 import { TTSPlugin } from '../plugins/TTSPlugin';
 import { RiskCheckPlugin } from '../plugins/RiskCheckPlugin';
 import { Capacitor } from '@capacitor/core';
+import { getDeviceId } from '../utils/device';
 
 interface Record {
   id: string;
@@ -391,16 +392,6 @@ const RANKING_CACHE_DURATION = 300000; // 排行榜缓存有效期：5分钟（�
 
 // 登录天数统计
 const loginDays = ref(0);
-
-// 获取或生成设备ID
-const getDeviceId = (): string => {
-  let deviceId = localStorage.getItem('deviceId');
-  if (!deviceId) {
-    deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem('deviceId', deviceId);
-  }
-  return deviceId;
-};
 
 // 加载设备状态
 const loadDeviceStatus = async () => {

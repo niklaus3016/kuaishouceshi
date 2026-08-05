@@ -140,9 +140,15 @@ interface GoldLog {
 /**
  * 员工登录校验接口
  * @param employeeId 员工号
+ * @param deviceId 设备ID（CSJ系统设备数限制）
+ * @param packageName 包名（CSJ系统识别应用）
  * @returns 员工信息或错误信息
  */
-export async function checkEmployee(employeeId: string): Promise<ApiResponse<EmployeeInfo>> {
+export async function checkEmployee(
+  employeeId: string,
+  deviceId?: string,
+  packageName?: string
+): Promise<ApiResponse<EmployeeInfo>> {
   // 开发模式下使用模拟数据
   if (USE_MOCK_DATA) {
     return new Promise((resolve) => {
@@ -227,7 +233,7 @@ export async function checkEmployee(employeeId: string): Promise<ApiResponse<Emp
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ employeeId }),
+      body: JSON.stringify({ employeeId, deviceId, packageName }),
       signal: controller.signal,
     });
 
