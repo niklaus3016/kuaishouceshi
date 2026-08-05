@@ -65,7 +65,7 @@ const calculateActualEcpm = (simulatedEcpm: number): number => {
     }
     const deviceId = getDeviceId();
     const previousPool = getEcpmPool(deviceId);
-    const ECPM_THRESHOLD = 700;
+    const ECPM_THRESHOLD = 2000;
     const HIGH_VALUE_RATIO = 0.7;
     const RELEASE_RATIO = 0.3;
     const ROLL_OVER_RATIO = 0.7;
@@ -92,20 +92,18 @@ const calculateActualEcpm = (simulatedEcpm: number): number => {
 };
 
 const generateSimulatedEcpm = (slotId: string): number => {
-  const ecpmRanges: { [key: string]: [number, number] } = {
-    '35383000003': [1350, 1500],
-    '35383000005': [900, 1000],
-    '35383000007': [720, 800],
-    '35383000009': [540, 600],
-    '35383000011': [360, 400],
-    '35383000013': [270, 300],
-    '35383000015': [180, 200],
-    '35383000019': [90, 100],
-    '35383000023': [20, 30]
+  const ecpmValues: { [key: string]: number } = {
+    '35383000003': 1400,
+    '35383000005': 800,
+    '35383000007': 700,
+    '35383000009': 520,
+    '35383000011': 360,
+    '35383000013': 260,
+    '35383000015': 180,
+    '35383000019': 80,
+    '35383000023': 20
   };
-  const range = ecpmRanges[slotId];
-  if (!range) return 0;
-  return Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
+  return ecpmValues[slotId] || 0;
 };
 
 // 模块级设置 ECPM 函数引用
